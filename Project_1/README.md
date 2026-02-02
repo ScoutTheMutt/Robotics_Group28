@@ -5,12 +5,12 @@ This package contains the Flask web server and HTML control interface for Projec
 ## 📁 File Structure
 
 ```
-robot-control/
-├── robot_server.py          # Flask server application
+Project_1/
+├── flaskServer.py            # Flask server application
 ├── templates/
-│   └── index.html           # Web control interface
-├── requirements.txt         # Python dependencies
-└── README.md               # This file
+│    └── index.html           # Web control interface
+├── requirements.txt          # Python dependencies
+└── README.md                 # This file
 ```
 
 ## 🚀 Quick Start
