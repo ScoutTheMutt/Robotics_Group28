@@ -1,4 +1,4 @@
-Right Arm lift servo
+TODO: Add the default target positions for each servo so we know default center position
 
 Servo 0 = Forward Backward
 Servo 1 = Left Right
