@@ -1,0 +1,19 @@
+Right Arm lift servo
+
+Servo 0 = Forward Backward
+Servo 1 = Left Right
+Servo 2 = Body turn left right
+Servo 3 = head up down
+Servo 4 = head left right
+Servo 5 = Right arm lift (Broken)
+Servo 6 = Right arm in and out
+Servo 7 = Right elbow up down
+Servo 8 = Right Wrist up down
+Servo 9 = Right Wrist rotate
+Servo 10 = Right hand close and open
+Servo 11 = Left arm lift
+Servo 12 = Left arm in and out
+Servo 13 = Left elbow up down
+Servo 14 = Left wrist up down
+Servo 15 = Left Wrist rotate
+Servo 16 = Left hand close and open
