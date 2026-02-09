@@ -43,47 +43,47 @@ class Robot:
         # Set initial safe state
         self.stop()
         
-    def driveForward(self, speed=0.5):
+    def driveForward(self, speed=0.25):
         """
         Drive robot forward
         
         Args:
             speed: Speed 0.0 to 1.0
         """
-        speed = max(0.0, min(1.0, speed))
+        speed = max(0.0, min(0.75, speed))
         self.left_motor.setSpeed(speed)
         self.right_motor.setSpeed(speed)
         
-    def driveBackward(self, speed=0.5):
+    def driveBackward(self, speed=0.25):
         """
         Drive robot backward
         
         Args:
             speed: Speed 0.0 to 1.0
         """
-        speed = max(0.0, min(1.0, speed))
+        speed = max(0.0, min(0.75, speed))
         self.left_motor.setSpeed(-speed)
         self.right_motor.setSpeed(-speed)
         
-    def turnLeft(self, speed=0.3):
+    def turnLeft(self, speed=0.15):
         """
         Turn robot left (differential drive)
         
         Args:
             speed: Turn speed 0.0 to 1.0
         """
-        speed = max(0.0, min(1.0, speed))
+        speed = max(0.0, min(0.75, speed))
         self.left_motor.setSpeed(-speed)
         self.right_motor.setSpeed(speed)
         
-    def turnRight(self, speed=0.3):
+    def turnRight(self, speed=0.15):
         """
         Turn robot right (differential drive)
         
         Args:
             speed: Turn speed 0.0 to 1.0
         """
-        speed = max(0.0, min(1.0, speed))
+        speed = max(0.0, min(0.75, speed))
         self.left_motor.setSpeed(speed)
         self.right_motor.setSpeed(-speed)
         
