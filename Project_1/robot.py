@@ -25,7 +25,9 @@ class Robot:
         
         # Initialize waist rotation
         # Servo 2 = Body turn left/right
-        self.waist = Servo(self.maestro, channel=2)
+        # NOTE: Center position is -35 degrees (not 0)
+        waist_center = 6000 - int((35.0 / 90.0) * 2000)  # Calculate position for -35 degrees
+        self.waist = Servo(self.maestro, channel=2, default_position=waist_center)
         
         # Initialize head
         # Servo 3 = Head up/down (tilt)

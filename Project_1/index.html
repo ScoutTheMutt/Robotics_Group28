@@ -209,9 +209,9 @@
                 <div class="slider-container">
                     <div class="slider-label">
                         <span>Waist Rotation</span>
-                        <span id="waist-value">0°</span>
+                        <span id="waist-value">-35°</span>
                     </div>
-                    <input type="range" id="waist" min="-90" max="90" value="0" step="5">
+                    <input type="range" id="waist" min="-90" max="20" value="-35" step="5">
                 </div>
             </div>
         </div>
@@ -258,8 +258,9 @@
         // Calculate wheel speeds from joystick position
         function calculateWheelSpeeds(x, y) {
             // Normalize to -1 to 1
+            // FIXED: Flip Y axis so up is forward, down is backward
             const normalizedX = x / maxRadius;
-            const normalizedY = -y / maxRadius; // Invert Y (up is positive)
+            const normalizedY = y / maxRadius; // Removed negation - now up (negative y) = forward
             
             // Differential drive mixing
             let leftSpeed = normalizedY + normalizedX;
