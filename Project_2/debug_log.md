@@ -13,8 +13,4 @@
 - `app.py` — Extended from Project 1 with a `/dialog` POST endpoint accepting `{"text": "user input"}`.
 - Supporting files carried over from Project 1: `robot.py`, `motor.py`, `servo.py`, `head.py`, `speaker.py`, `maestro.py`, `templates/`
 
-### Notes
-- Project 2 branch was created off `main` and subsequently merged back into `main`.
-- No hardware issues encountered during initial push (dev machine, no Maestro connected).
-
 ---
