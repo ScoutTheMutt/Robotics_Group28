@@ -4,12 +4,12 @@
 
 1. Copy project to robot:
 ```bash
-scp -r "/path/to/Project_2" group28@172.20.10.12:~/
+scp -r "/path/to/Project_2" group28@ip:~/
 ```
 
 2. SSH into robot:
 ```bash
-ssh group28@172.20.10.12
+ssh group28@ip
 ```
 
 3. Run the server:
@@ -18,7 +18,7 @@ cd ~/Project_2
 python app.py --script Documents/testDialogFileForPractice.txt
 ```
 
-4. Open browser and navigate to `http://172.20.10.12:5000`
+4. Open browser and navigate to `http://ip:5000`
 
 ---
 
