@@ -116,6 +116,7 @@ class ActionRunner:
             return
         self.robot.setHeadTilt(0)
         self._sleep(0.3)
+        self.robot.stop()
 
     def _head_no(self):
         """Shake head left and right."""
@@ -131,6 +132,7 @@ class ActionRunner:
             return
         self.robot.setHeadPan(0)
         self._sleep(0.3)
+        self.robot.stop()
 
     def _arm_raise(self):
         """Raise left arm and lower it."""
@@ -149,6 +151,7 @@ class ActionRunner:
         self.robot.setElbowAngle(0)
         self.robot.setWristRotation(0)
         self._sleep(0.5)
+        self.robot.stop()
 
     def _dance90(self):
         """Spin ~90 degrees using timed differential drive."""
