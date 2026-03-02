@@ -145,29 +145,33 @@ class ActionRunner:
 
     def _dance90(self):
         """Spin ~90 degrees using timed differential drive."""
+        flag = True
         try:
             if self._cancel.is_set():
                 return
-            for _ in range(3):
-                self.robot.setWheelSpeeds(0.3, -0.3)
-            self._sleep(0.7)
+            while flag==True:
+                self.robot.setWheelSpeeds(0.5, -0.5)
+                self._sleep(0.7)
+                flag = False
             if self._cancel.is_set():
                 return
             self.robot.stop()
             self._sleep(0.1)
             if self._cancel.is_set():
                 return
-            for _ in range(3):
-                self.robot.setWheelSpeeds(-0.3, 0.3)
-            self._sleep(1.4)
+            while flag==False:
+                self.robot.setWheelSpeeds(-0.5, 0.5)
+                self._sleep(1.4)
+                flag = True
             if self._cancel.is_set():
                 return
             self.robot.stop()
             self._sleep(0.1)
             if self._cancel.is_set():
                 return
-            for _ in range(3):
-                self.robot.setWheelSpeeds(0.3, -0.3)
-            self._sleep(0.7)
+            while flag==True:
+                self.robot.setWheelSpeeds(0.5, -0.5)
+                self._sleep(0.7)
+                flag = False
         finally:
             self.robot.stop()
