@@ -137,10 +137,12 @@ class ActionRunner:
         if self._cancel.is_set():
             return
         self.robot.setArmAngle(-90)
-        self._sleep(1.5)
+        self.robot.setElbowAngle(-45)
+        self._sleep(2.5)
         if self._cancel.is_set():
             return
         self.robot.setArmAngle(0)
+        self.robot.setElbowAngle(0)
         self._sleep(0.5)
 
     def _dance90(self):
@@ -181,7 +183,7 @@ class ActionRunner:
                 return
             while flag==False:
                 self.robot.setWheelSpeeds(-0.55, 0.55)
-                self._sleep(1)
+                self._sleep(.75)
                 flag = True
         finally:
             self.robot.stop()
