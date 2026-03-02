@@ -148,7 +148,8 @@ class ActionRunner:
         try:
             if self._cancel.is_set():
                 return
-            self.robot.setWheelSpeeds(0.3, -0.3)
+            for _ in range(3):
+                self.robot.setWheelSpeeds(0.3, -0.3)
             self._sleep(0.7)
             if self._cancel.is_set():
                 return
@@ -156,7 +157,8 @@ class ActionRunner:
             self._sleep(0.1)
             if self._cancel.is_set():
                 return
-            self.robot.setWheelSpeeds(-0.3, 0.3)
+            for _ in range(3):
+                self.robot.setWheelSpeeds(-0.3, 0.3)
             self._sleep(1.4)
             if self._cancel.is_set():
                 return
@@ -164,7 +166,8 @@ class ActionRunner:
             self._sleep(0.1)
             if self._cancel.is_set():
                 return
-            self.robot.setWheelSpeeds(0.3, -0.3)
+            for _ in range(3):
+                self.robot.setWheelSpeeds(0.3, -0.3)
             self._sleep(0.7)
         finally:
             self.robot.stop()
