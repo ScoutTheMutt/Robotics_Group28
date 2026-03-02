@@ -137,6 +137,7 @@ class ActionRunner:
         if self._cancel.is_set():
             return
         self.robot.setArmAngle(-90)
+        self._sleep(0.5)
         self.robot.setElbowAngle(60)
         self.robot.setWristRotation(90)
         self._sleep(.5)
