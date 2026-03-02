@@ -40,6 +40,7 @@ class Robot:
         # Initialize left arm lift servo
         # Servo 11 = Left arm lift
         self.arm = Servo(self.maestro, channel=11)
+        self.elbow = Servo(self.maestro, channel=13)
 
         # Initialize speaker
         self.speaker = Speaker()
@@ -142,6 +143,15 @@ class Robot:
             angle: Angle in degrees -90 to 90
         """
         self.arm.setAngle(angle)
+
+    def setElbowAngle(self, angle):
+        """
+        Set left arm elbow angle
+
+        Args:
+            angle: Angle in degrees -90 to 90
+        """
+        self.elbow.setAngle(angle)
 
     def speak(self, text):
         """
