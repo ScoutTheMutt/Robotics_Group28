@@ -136,7 +136,7 @@ class ActionRunner:
         """Raise left arm and lower it."""
         if self._cancel.is_set():
             return
-        self.robot.setArmAngle(60)
+        self.robot.setArmAngle(-90)
         self._sleep(1.5)
         if self._cancel.is_set():
             return
