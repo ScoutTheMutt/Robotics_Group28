@@ -150,8 +150,8 @@ class ActionRunner:
             if self._cancel.is_set():
                 return
             while flag==True:
-                self.robot.setWheelSpeeds(0.5, -0.5)
-                self._sleep(0.7)
+                self.robot.setWheelSpeeds(0.75, -0.75)
+                self._sleep(1)
                 flag = False
             if self._cancel.is_set():
                 return
@@ -160,8 +160,8 @@ class ActionRunner:
             if self._cancel.is_set():
                 return
             while flag==False:
-                self.robot.setWheelSpeeds(-0.5, 0.5)
-                self._sleep(1.4)
+                self.robot.setWheelSpeeds(-0.75, 0.75)
+                self._sleep(1)
                 flag = True
             if self._cancel.is_set():
                 return
@@ -170,8 +170,8 @@ class ActionRunner:
             if self._cancel.is_set():
                 return
             while flag==True:
-                self.robot.setWheelSpeeds(0.5, -0.5)
-                self._sleep(0.7)
+                self.robot.setWheelSpeeds(0.75, -0.75)
+                self._sleep(1)
                 flag = False
         finally:
             self.robot.stop()
