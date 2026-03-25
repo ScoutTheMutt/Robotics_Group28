@@ -173,9 +173,6 @@ def lidar_status():
         rear_blocked=lidar.rear_blocked
     )
 
-print("Front blocked:", lidar.front_blocked)
-print("Rear blocked:", lidar.rear_blocked)
-
 
 # ===========================================================================
 # Project 2 dialog routes (unchanged)
