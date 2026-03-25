@@ -21,7 +21,7 @@ FRONT_MIN2 = 0
 FRONT_MAX2 = 30
 REAR_MIN = 150
 REAR_MAX = 210
-STOP_DISTANCE_MM = 800   # Stop if obstacle closer than this
+STOP_DISTANCE_MM = 1500  # Stop if obstacle closer than this
 
 
 def _in_front_zone(angle):
@@ -94,7 +94,7 @@ class LidarMonitor:
                 self._lidar = RPLidar(self.port)
                 self._lidar.reset()
                 time.sleep(1)
-                self._lidar.clean_input_buf()
+                self._lidar.clean_input_buf() # type: ignore
                 print("[LIDAR] Connected — scanning...")
 
                 for scan in self._lidar.iter_scans():
