@@ -33,16 +33,28 @@ def _in_rear_zone(angle):
 
 
 class LidarMonitor:
-    """Thread-safe RPLIDAR monitor that exposes front_blocked / rear_blocked flags."""
+    """Thread-safe RPLIDAR monitor that exposes front_blocked / rear_blocked flags.
+
+    Safety locks:
+      front_lock — held by LiDAR thread when front is blocked; released when clear.
+      rear_lock  — held by LiDAR thread when rear is blocked; released when clear.
+    Motor code tries acquire(blocking=False): if it fails, the direction is blocked.
+    """
 
     def __init__(self, port='/dev/ttyUSB0'):
         self.port = port
-        self._lock = threading.Lock()
+        self._lock = threading.Lock()        # protects boolean flags for UI
         self._front_blocked = False
         self._rear_blocked = False
         self._running = False
         self._thread = None
         self._lidar = None
+
+        # Safety locks — held by LiDAR thread when direction is blocked
+        self.front_lock = threading.Lock()
+        self.rear_lock = threading.Lock()
+        self._front_lock_held = False
+        self._rear_lock_held = False
 
     # ------------------------------------------------------------------
     # Public interface
@@ -68,6 +80,7 @@ class LidarMonitor:
     def stop(self):
         """Signal the background thread to stop and disconnect the sensor."""
         self._running = False
+        self._release_safety_locks()
         if self._lidar:
             try:
                 self._lidar.stop()
@@ -75,6 +88,15 @@ class LidarMonitor:
                 self._lidar.disconnect()
             except Exception:
                 pass
+
+    def _release_safety_locks(self):
+        """Release any held safety locks so motors are not left permanently blocked."""
+        if self._front_lock_held:
+            self.front_lock.release()
+            self._front_lock_held = False
+        if self._rear_lock_held:
+            self.rear_lock.release()
+            self._rear_lock_held = False
 
     # ------------------------------------------------------------------
     # Background thread
@@ -115,6 +137,23 @@ class LidarMonitor:
                         if _in_rear_zone(angle) and distance < STOP_DISTANCE_MM:
                             new_rear = True
 
+                    # --- Update front safety lock ---
+                    if new_front and not self._front_lock_held:
+                        self.front_lock.acquire()
+                        self._front_lock_held = True
+                    elif not new_front and self._front_lock_held:
+                        self.front_lock.release()
+                        self._front_lock_held = False
+
+                    # --- Update rear safety lock ---
+                    if new_rear and not self._rear_lock_held:
+                        self.rear_lock.acquire()
+                        self._rear_lock_held = True
+                    elif not new_rear and self._rear_lock_held:
+                        self.rear_lock.release()
+                        self._rear_lock_held = False
+
+                    # --- Update boolean flags for UI endpoint ---
                     with self._lock:
                         prev_front = self._front_blocked
                         prev_rear = self._rear_blocked
@@ -131,6 +170,7 @@ class LidarMonitor:
 
             except Exception as e:
                 print(f"[LIDAR] Error: {e} — retrying in 2s...")
+                self._release_safety_locks()
                 with self._lock:
                     self._front_blocked = False
                     self._rear_blocked = False
