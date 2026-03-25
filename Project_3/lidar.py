@@ -92,6 +92,9 @@ class LidarMonitor:
         while self._running:
             try:
                 self._lidar = RPLidar(self.port)
+                self._lidar.reset()
+                time.sleep(1)
+                self._lidar.clean_input_buf()
                 print("[LIDAR] Connected — scanning...")
 
                 for scan in self._lidar.iter_scans():
