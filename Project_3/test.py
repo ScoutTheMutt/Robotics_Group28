@@ -4,6 +4,7 @@ import time
 lidar = RPLidar('/dev/ttyUSB0')  # adjust port if needed
 lidar.reset()
 time.sleep(1)
+lidar._serial.reset_input_buffer()  # flush stale bytes (replaces clean_input_buf)
 
 print("Health:", lidar.get_health())
 print("Info:", lidar.get_info())

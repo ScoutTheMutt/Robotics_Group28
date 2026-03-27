@@ -116,7 +116,7 @@ class LidarMonitor:
                 self._lidar = RPLidar(self.port)
                 self._lidar.reset()
                 time.sleep(1)
-                self._lidar.clean_input_buf() # type: ignore
+                self._lidar._serial.reset_input_buffer()  # flush stale bytes
                 print("[LIDAR] Connected — scanning...")
 
                 for scan in self._lidar.iter_scans():
