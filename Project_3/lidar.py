@@ -18,7 +18,7 @@ import time
 FRONT_MIN1 = 330
 FRONT_MAX1 = 360
 FRONT_MIN2 = 0
-FRONT_MAX2 = 30
+FRONT_MAX2 = 20
 REAR_MIN = 150
 REAR_MAX = 210
 STOP_DISTANCE_MM = 1500  # Stop if obstacle closer than this

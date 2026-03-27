@@ -76,20 +76,18 @@ class Robot:
             avg = (left_speed + right_speed) / 2.0
 
             if avg > _SPEED_THRESHOLD:
-                # Forward intent — try to acquire front safety lock
-                if not self._lidar.front_lock.acquire(blocking=False):
+                # Forward intent — check front blocked flag
+                if self._lidar.front_blocked:
                     print("[SAFETY] FRONT LOCKED — forward command ignored")
                     self.stop()
                     return
-                self._lidar.front_lock.release()
 
             elif avg < -_SPEED_THRESHOLD:
-                # Backward intent — try to acquire rear safety lock
-                if not self._lidar.rear_lock.acquire(blocking=False):
+                # Backward intent — check rear blocked flag
+                if self._lidar.rear_blocked:
                     print("[SAFETY] REAR LOCKED — backward command ignored")
                     self.stop()
                     return
-                self._lidar.rear_lock.release()
 
         self.left_motor.setSpeed(left_speed)
         self.right_motor.setSpeed(right_speed)
