@@ -21,7 +21,7 @@ FRONT_MIN2 = 0
 FRONT_MAX2 = 20
 REAR_MIN = 150
 REAR_MAX = 210
-STOP_DISTANCE_MM = 1500  # Stop if obstacle closer than this
+STOP_DISTANCE_MM = 800  # Stop if obstacle closer than this
 
 
 def _in_front_zone(angle):
