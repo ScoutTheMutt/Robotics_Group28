@@ -484,6 +484,13 @@
         let isDragging = false;
         let centerX = 0, centerY = 0, maxRadius = 0;
 
+        // Lidar safety state — updated by polling, used to gate drive commands
+        let lidarFrontBlocked = false;
+        let lidarRearBlocked  = false;
+
+        // Matches _SPEED_THRESHOLD in robot.py so pure turns are never blocked
+        const SPEED_THRESHOLD = 0.05;
+
         function initJoystick() {
             const rect = joystickContainer.getBoundingClientRect();
             centerX = rect.width / 2;
@@ -503,6 +510,20 @@
         }
 
         function sendDriveCommand(left, right) {
+            const avg = (left + right) / 2.0;
+
+            // Gate forward commands when front is blocked
+            if (avg > SPEED_THRESHOLD && lidarFrontBlocked) {
+                statusDiv.textContent = 'FRONT BLOCKED — forward drive suppressed';
+                return;
+            }
+
+            // Gate backward commands when rear is blocked
+            if (avg < -SPEED_THRESHOLD && lidarRearBlocked) {
+                statusDiv.textContent = 'REAR BLOCKED — backward drive suppressed';
+                return;
+            }
+
             fetch('/drive', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -631,6 +652,10 @@
         const rearIndicator  = document.getElementById('rear-indicator');
 
         function updateLidarUI(frontBlocked, rearBlocked) {
+            // Update module-level flags used by sendDriveCommand
+            lidarFrontBlocked = frontBlocked;
+            lidarRearBlocked  = rearBlocked;
+
             if (frontBlocked) {
                 frontIndicator.textContent = 'BLOCKED';
                 frontIndicator.className = 'lidar-indicator blocked';
