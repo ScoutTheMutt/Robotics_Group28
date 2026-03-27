@@ -138,20 +138,20 @@ class LidarMonitor:
                             new_rear = True
 
                     # --- Update front safety lock ---
-                    if new_front and not self._front_lock_held:
-                        self.front_lock.acquire()
-                        self._front_lock_held = True
-                    elif not new_front and self._front_lock_held:
-                        self.front_lock.release()
-                        self._front_lock_held = False
-
-                    # --- Update rear safety lock ---
-                    if new_rear and not self._rear_lock_held:
+                    if new_front and not self._rear_lock_held:
                         self.rear_lock.acquire()
                         self._rear_lock_held = True
-                    elif not new_rear and self._rear_lock_held:
+                    elif not new_front and self._rear_lock_held:
                         self.rear_lock.release()
                         self._rear_lock_held = False
+
+                    # --- Update rear safety lock ---
+                    if new_rear and not self._front_lock_held:
+                        self.front_lock.acquire()
+                        self._front_lock_held = True
+                    elif not new_rear and self._front_lock_held:
+                        self.front_lock.release()
+                        self._front_lock_held = False
 
                     # --- Update boolean flags for UI endpoint ---
                     with self._lock:
