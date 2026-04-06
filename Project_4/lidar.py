@@ -122,6 +122,7 @@ class LidarMonitor:
                     if not self._running:
                         break
 
+                    self._lidar._read_descriptor()
                     new_front = False
                     new_rear = False
 
