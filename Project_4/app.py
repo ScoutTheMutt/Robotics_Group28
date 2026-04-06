@@ -1,17 +1,18 @@
 """
-Flask Robot Control Server — Project 2
-Extends Project 1 with a Dialog Engine and Action Runner.
-Flask NEVER touches hardware directly — only calls Robot/Engine methods.
+Flask Robot Control Server — Project 3
+Extends Project 2 with LIDAR safety stops.
+Flask NEVER touches hardware directly — only calls Robot/Engine/Lidar methods.
 """
 
 import argparse
 import sys
 
-# Parse CLI args before importing Flask (so --script/--seed work)
-parser = argparse.ArgumentParser(description="Project 2 Robot Dialog Server")
-parser.add_argument('--seed', type=int, default=None, help="RNG seed for deterministic output")
+parser = argparse.ArgumentParser(description="Project 3 Robot Lidar Safety Server")
+parser.add_argument('--seed', type=int, default=None, help="RNG seed for deterministic dialog output")
 parser.add_argument('--script', default='testDialogFileForPractice.txt',
                     help="Dialog script file to load on startup")
+parser.add_argument('--lidar-port', default='/dev/ttyUSB0',
+                    help="Serial port for RPLIDAR (default: /dev/ttyUSB0)")
 args = parser.parse_args()
 
 from flask import Flask, render_template, request, jsonify
@@ -20,17 +21,21 @@ import atexit
 
 from dialog_engine import DialogEngine, FatalParseError
 from action_runner import ActionRunner
+from lidar import LidarMonitor
 
 app = Flask(__name__)
 
-# Initialize robot (single instance)
+# Initialize hardware
 robot = Robot()
+lidar = LidarMonitor(port=args.lidar_port)
+robot.set_lidar(lidar)
+lidar.start()
 
 # Initialize dialog engine and action runner
 engine = DialogEngine(seed=args.seed)
 action_runner = ActionRunner(robot)
 
-# Load script (fatal if no valid rules)
+# Load dialog script
 try:
     engine.load(args.script)
 except FatalParseError as e:
@@ -38,11 +43,11 @@ except FatalParseError as e:
     sys.exit(1)
 
 
-# Safety: ensure robot stops when server exits
 def cleanup():
     action_runner.cancel()
     robot.stop()
-    print("Robot stopped - server shutting down")
+    lidar.stop()
+    print("Robot stopped — server shutting down")
 
 atexit.register(cleanup)
 
@@ -53,7 +58,6 @@ atexit.register(cleanup)
 
 @app.route('/')
 def index():
-    """Serve the main control page"""
     return render_template('index.html')
 
 
@@ -77,7 +81,7 @@ def drive():
         return jsonify(status="error", message=str(e)), 500
 
 
-@app.route('/stop', methods=['POST'])
+@app.route('/stop', methods=['POST', 'HEAD'])
 def stop():
     try:
         robot.stop()
@@ -158,16 +162,24 @@ def speak():
 
 
 # ===========================================================================
-# Project 2 dialog routes
+# Project 3 — Lidar status route
+# ===========================================================================
+
+@app.route('/lidar/status', methods=['GET'])
+def lidar_status():
+    """Return current front/rear blocked state from the lidar monitor."""
+    return jsonify(
+        front_blocked=lidar.front_blocked,
+        rear_blocked=lidar.rear_blocked
+    )
+
+
+# ===========================================================================
+# Project 2 dialog routes (unchanged)
 # ===========================================================================
 
 @app.route('/dialog', methods=['POST'])
 def dialog():
-    """
-    Process a dialog turn.
-    Expects JSON: {"text": "user input"}
-    Returns: {"response": str|null, "state": str, "actions": list, "matched": bool}
-    """
     try:
         data = request.get_json()
         if not data or 'text' not in data:
@@ -180,9 +192,8 @@ def dialog():
         speak_text, actions, is_interrupt = engine.process(user_text)
 
         if is_interrupt:
-            # Safety interrupt: cancel all actions and stop wheels
             action_runner.cancel()
-            action_runner.resume()  # Ready for future actions
+            action_runner.resume()
             return jsonify(
                 response=speak_text,
                 state=engine.state,
@@ -212,19 +223,13 @@ def dialog():
 
 @app.route('/dialog/load', methods=['POST'])
 def dialog_load():
-    """
-    Load a new dialog script.
-    Expects JSON: {"file": "path/to/script.txt"}
-    """
     try:
         data = request.get_json()
         if not data or 'file' not in data:
             return jsonify(status="error", message="Missing file path"), 400
-
         filepath = str(data['file'])
         engine.load(filepath)
         return jsonify(status="ok", state=engine.state)
-
     except FatalParseError as e:
         return jsonify(status="error", message=str(e)), 400
     except Exception as e:
@@ -234,7 +239,6 @@ def dialog_load():
 
 @app.route('/dialog/state', methods=['GET'])
 def dialog_state():
-    """Return current dialog engine state."""
     return jsonify(
         state=engine.state,
         scope_depth=engine.scope_depth,

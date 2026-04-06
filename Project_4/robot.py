@@ -1,7 +1,8 @@
 """
-Robot Class
-Main robot controller that owns all hardware components
-This is the ONLY class that talks to hardware
+Robot Class — Project 3
+Extends Project 2 with LIDAR-based safety stops.
+setWheelSpeeds() checks front_blocked / rear_blocked before moving.
+Flask NEVER touches hardware directly — only calls Robot methods.
 """
 
 from maestro import Controller
@@ -10,170 +11,134 @@ from servo import Servo
 from head import Head
 from speaker import Speaker
 
+# Minimum average speed to trigger a directional safety check.
+# Keeps pure turns (left<0, right>0 or vice versa) from being blocked.
+_SPEED_THRESHOLD = 0.05
+
+
 class Robot:
     def __init__(self):
-        """Initialize robot with all components"""
+        """Initialize robot with all components."""
 
-        # Initialize Maestro controller
         self.maestro = Controller()
 
-        # Initialize drive motors
-        # Servo 0 = Forward/Backward (Left wheel)
-        # Servo 1 = Left/Right (Right wheel)
+        # Drive motors: ch0 = left, ch1 = right
         self.left_motor = Motor(self.maestro, channel=0)
         self.right_motor = Motor(self.maestro, channel=1)
 
-        # Initialize waist rotation
-        # Servo 2 = Body turn left/right
-        # NOTE: Center position is -35 degrees (not 0)
-        waist_center = 6000 - int((35.0 / 90.0) * 2000)  # Calculate position for -35 degrees
+        # Waist rotation (hardware center is -35°)
+        waist_center = 6000 - int((35.0 / 90.0) * 2000)
         self.waist = Servo(self.maestro, channel=2, default_position=waist_center)
 
-        # Initialize head
-        # Servo 3 = Head up/down (tilt)
-        # Servo 4 = Head left/right (pan)
+        # Head: ch3 = tilt, ch4 = pan
         self.head = Head(
             tilt_servo=Servo(self.maestro, channel=3),
             pan_servo=Servo(self.maestro, channel=4)
         )
 
-        # Initialize left arm lift servo
-        # Servo 11 = Left arm lift
+        # Arm servos
         self.arm = Servo(self.maestro, channel=11)
         self.elbow = Servo(self.maestro, channel=13)
         self.wristRotation = Servo(self.maestro, channel=15)
 
-        # Initialize speaker
         self.speaker = Speaker()
 
-        # Set initial safe state
+        # Lidar monitor — attached after construction via set_lidar()
+        self._lidar = None
+
         self.stop()
 
-    def driveForward(self, speed=0.25):
-        """
-        Drive robot forward
+    # ------------------------------------------------------------------
+    # Lidar integration
+    # ------------------------------------------------------------------
 
-        Args:
-            speed: Speed 0.0 to 1.0
-        """
-        speed = max(0.0, min(0.75, speed))
-        self.left_motor.setSpeed(speed)
-        self.right_motor.setSpeed(speed)
+    def set_lidar(self, lidar_monitor):
+        """Attach a LidarMonitor so setWheelSpeeds can enforce safety stops."""
+        self._lidar = lidar_monitor
 
-    def driveBackward(self, speed=0.25):
-        """
-        Drive robot backward
-
-        Args:
-            speed: Speed 0.0 to 1.0
-        """
-        speed = max(0.0, min(0.75, speed))
-        self.left_motor.setSpeed(-speed)
-        self.right_motor.setSpeed(-speed)
-
-    def turnLeft(self, speed=0.15):
-        """
-        Turn robot left (differential drive)
-
-        Args:
-            speed: Turn speed 0.0 to 1.0
-        """
-        speed = max(0.0, min(0.75, speed))
-        self.left_motor.setSpeed(-speed)
-        self.right_motor.setSpeed(speed)
-
-    def turnRight(self, speed=0.15):
-        """
-        Turn robot right (differential drive)
-
-        Args:
-            speed: Turn speed 0.0 to 1.0
-        """
-        speed = max(0.0, min(0.75, speed))
-        self.left_motor.setSpeed(speed)
-        self.right_motor.setSpeed(-speed)
+    # ------------------------------------------------------------------
+    # Motion — all wheel commands funnel through setWheelSpeeds
+    # ------------------------------------------------------------------
 
     def setWheelSpeeds(self, left_speed, right_speed):
         """
-        Set individual wheel speeds for precise control
+        Set individual wheel speeds with LIDAR safety enforcement.
+
+        Forward intent  (avg > threshold): blocked when front_blocked is True.
+        Backward intent (avg < -threshold): blocked when rear_blocked is True.
+        Pure turns (opposite signs): always allowed.
 
         Args:
-            left_speed: Left wheel speed -1.0 to 1.0
-            right_speed: Right wheel speed -1.0 to 1.0
+            left_speed:  -1.0 to 1.0
+            right_speed: -1.0 to 1.0
         """
+        if self._lidar is not None:
+            avg = (left_speed + right_speed) / 2.0
+
+            if avg > _SPEED_THRESHOLD:
+                # Forward intent — check front blocked flag
+                if self._lidar.front_blocked:
+                    print("[SAFETY] FRONT LOCKED — forward command ignored")
+                    self.stop()
+                    return
+
+            elif avg < -_SPEED_THRESHOLD:
+                # Backward intent — check rear blocked flag
+                if self._lidar.rear_blocked:
+                    print("[SAFETY] REAR LOCKED — backward command ignored")
+                    self.stop()
+                    return
+
         self.left_motor.setSpeed(left_speed)
         self.right_motor.setSpeed(right_speed)
 
+    def driveForward(self, speed=0.25):
+        speed = max(0.0, min(0.75, speed))
+        self.setWheelSpeeds(speed, speed)
+
+    def driveBackward(self, speed=0.25):
+        speed = max(0.0, min(0.75, speed))
+        self.setWheelSpeeds(-speed, -speed)
+
+    def turnLeft(self, speed=0.15):
+        speed = max(0.0, min(0.75, speed))
+        self.setWheelSpeeds(-speed, speed)
+
+    def turnRight(self, speed=0.15):
+        speed = max(0.0, min(0.75, speed))
+        self.setWheelSpeeds(speed, -speed)
+
     def stop(self):
-        """EMERGENCY STOP - halt all motion"""
+        """EMERGENCY STOP — halt all wheel motion."""
         self.left_motor.stop()
         self.right_motor.stop()
 
-    def setHeadPan(self, angle):
-        """
-        Set head pan angle
+    # ------------------------------------------------------------------
+    # Head / body / speech
+    # ------------------------------------------------------------------
 
-        Args:
-            angle: Angle in degrees -90 to 90
-        """
+    def setHeadPan(self, angle):
         self.head.setPan(angle)
 
     def setHeadTilt(self, angle):
-        """
-        Set head tilt angle
-
-        Args:
-            angle: Angle in degrees -90 to 90
-        """
         self.head.setTilt(angle)
 
     def setWaistRotation(self, angle):
-        """
-        Set waist rotation angle
-
-        Args:
-            angle: Angle in degrees -90 to 90
-        """
         self.waist.setAngle(angle)
 
     def setArmAngle(self, angle):
-        """
-        Set left arm lift angle
-
-        Args:
-            angle: Angle in degrees -90 to 90
-        """
         self.arm.setAngle(angle)
 
     def setElbowAngle(self, angle):
-        """
-        Set left arm elbow angle
-
-        Args:
-            angle: Angle in degrees -90 to 90
-        """
         self.elbow.setAngle(angle)
 
     def setWristRotation(self, angle):
-        """
-        Set left arm wrist rotation angle
-
-        Args:
-            angle: Angle in degrees -90 to 90
-        """
         self.wristRotation.setAngle(angle)
 
     def speak(self, text):
-        """
-        Speak text (non-blocking)
-
-        Args:
-            text: Text to speak
-        """
         self.speaker.say(text)
 
     def centerAll(self):
-        """Return all servos to center position and stop motors"""
         self.stop()
         self.head.center()
         self.waist.center()
