@@ -92,19 +92,19 @@ class Robot:
         self.left_motor.setSpeed(left_speed)
         self.right_motor.setSpeed(right_speed)
 
-    def driveForward(self, speed=0.25):
+    def driveForward(self, speed=0.15):
         speed = max(0.0, min(0.75, speed))
         self.setWheelSpeeds(speed, speed)
 
-    def driveBackward(self, speed=0.25):
+    def driveBackward(self, speed=0.15):
         speed = max(0.0, min(0.75, speed))
         self.setWheelSpeeds(-speed, -speed)
 
-    def turnLeft(self, speed=0.15):
+    def turnLeft(self, speed=0.05):
         speed = max(0.0, min(0.75, speed))
         self.setWheelSpeeds(-speed, speed)
 
-    def turnRight(self, speed=0.15):
+    def turnRight(self, speed=0.05):
         speed = max(0.0, min(0.75, speed))
         self.setWheelSpeeds(speed, -speed)
 
