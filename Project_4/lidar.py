@@ -114,7 +114,6 @@ class LidarMonitor:
         while self._running:
             try:
                 self._lidar = RPLidar(self.port)
-                self._lidar.reset()              # 1. Reset the LIDAR device
                 time.sleep(1)                    # 2. Wait 1 second for reset to complete
                 print("[LIDAR] Connected — scanning...")
 
@@ -122,7 +121,6 @@ class LidarMonitor:
                     if not self._running:
                         break
 
-                    self._lidar._read_descriptor()
                     new_front = False
                     new_rear = False
 
