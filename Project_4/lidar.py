@@ -174,8 +174,11 @@ class LidarMonitor:
                     self._rear_blocked = False
                 if self._lidar:
                     try:
+                        self._lidar.stop()        # ← stop scanning
+                        self._lidar.stop_motor()  # ← stop the motor
+                        time.sleep(1)             # ← let it spin down before disconnect
                         self._lidar.disconnect()
                     except Exception:
                         pass
                     self._lidar = None
-                time.sleep(2)
+                    time.sleep(2)
