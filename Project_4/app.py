@@ -22,6 +22,7 @@ import atexit
 from dialog_engine import DialogEngine, FatalParseError
 from action_runner import ActionRunner
 from lidar import LidarMonitor
+from wall_follower import WallFollower
 
 app = Flask(__name__)
 
@@ -30,6 +31,8 @@ robot = Robot()
 lidar = LidarMonitor(port=args.lidar_port)
 robot.set_lidar(lidar)
 lidar.start()
+
+wall_follower = WallFollower(robot, lidar)
 
 # Initialize dialog engine and action runner
 engine = DialogEngine(seed=args.seed)
@@ -44,6 +47,7 @@ except FatalParseError as e:
 
 
 def cleanup():
+    wall_follower.stop()
     action_runner.cancel()
     robot.stop()
     lidar.stop()
@@ -243,6 +247,43 @@ def dialog_state():
         state=engine.state,
         scope_depth=engine.scope_depth,
         variables=engine.variables
+    )
+
+
+# ===========================================================================
+# Project 4 — Autonomous wall follower routes
+# ===========================================================================
+
+@app.route('/wall_follow/start', methods=['POST'])
+def wall_follow_start():
+    """Start the autonomous wall follower."""
+    try:
+        wall_follower.start()
+        return jsonify(status="ok", state=wall_follower.state)
+    except Exception as e:
+        print(f"Wall follow start error: {e}")
+        return jsonify(status="error", message=str(e)), 500
+
+
+@app.route('/wall_follow/stop', methods=['POST'])
+def wall_follow_stop():
+    """Stop the autonomous wall follower."""
+    try:
+        wall_follower.stop()
+        return jsonify(status="ok", state=wall_follower.state)
+    except Exception as e:
+        print(f"Wall follow stop error: {e}")
+        return jsonify(status="error", message=str(e)), 500
+
+
+@app.route('/wall_follow/status', methods=['GET'])
+def wall_follow_status():
+    """Return current wall follower state and LIDAR zone distances."""
+    return jsonify(
+        state=wall_follower.state,
+        front_dist=lidar.front_dist,
+        right_dist=lidar.right_dist,
+        front_right_dist=lidar.front_right_dist,
     )
 
 

@@ -1,12 +1,18 @@
 """
 LidarMonitor
 Continuously reads RPLIDAR scan data in a background thread.
-Updates front_blocked and rear_blocked flags used by the safety system.
+Updates front_blocked and rear_blocked flags used by the safety system,
+and exposes per-zone minimum distances for the wall follower.
 
-Detection zones:
-  Front: 330-360 degrees OR 0-30 degrees  (60-deg arc at robot nose)
-  Rear:  150-210 degrees                  (60-deg arc at robot back)
+Safety zones (used for blocked flags):
+  Front: 330-360 OR 0-20 degrees  (50-deg arc at robot nose)
+  Rear:  150-210 degrees          (60-deg arc at robot back)
   Stop distance: 800 mm
+
+Wall-follower zones (right-wall mode, 0° = physical front):
+  front:       340-360 OR 0-20 degrees
+  front-right: 290-340 degrees
+  right:       250-290 degrees
 
 The lidar orientation is mounted so that angle 0 points directly forward.
 """
@@ -14,7 +20,7 @@ The lidar orientation is mounted so that angle 0 points directly forward.
 import threading
 import time
 
-# --- Zone configuration (degrees) ---
+# --- Safety zone configuration (degrees) ---
 FRONT_MIN1 = 330
 FRONT_MAX1 = 360
 FRONT_MIN2 = 0
@@ -23,6 +29,17 @@ REAR_MIN = 150
 REAR_MAX = 210
 STOP_DISTANCE_MM = 800  # Stop if obstacle closer than this
 
+# --- Wall-follower zone configuration (degrees) ---
+WF_FRONT_MIN1    = 340
+WF_FRONT_MAX1    = 360
+WF_FRONT_MIN2    = 0
+WF_FRONT_MAX2    = 20
+WF_FRONT_RIGHT_MIN = 290
+WF_FRONT_RIGHT_MAX = 340
+WF_RIGHT_MIN     = 250
+WF_RIGHT_MAX     = 290
+MAX_VALID_DIST_MM = 6000  # discard spurious long-range readings
+
 
 def _in_front_zone(angle):
     return (FRONT_MIN1 <= angle <= FRONT_MAX1) or (FRONT_MIN2 <= angle <= FRONT_MAX2)
@@ -30,6 +47,18 @@ def _in_front_zone(angle):
 
 def _in_rear_zone(angle):
     return REAR_MIN <= angle <= REAR_MAX
+
+
+def _in_wf_front_zone(angle):
+    return (WF_FRONT_MIN1 <= angle <= WF_FRONT_MAX1) or (WF_FRONT_MIN2 <= angle <= WF_FRONT_MAX2)
+
+
+def _in_wf_front_right_zone(angle):
+    return WF_FRONT_RIGHT_MIN <= angle <= WF_FRONT_RIGHT_MAX
+
+
+def _in_wf_right_zone(angle):
+    return WF_RIGHT_MIN <= angle <= WF_RIGHT_MAX
 
 
 class LidarMonitor:
@@ -43,7 +72,7 @@ class LidarMonitor:
 
     def __init__(self, port='/dev/ttyUSB0'):
         self.port = port
-        self._lock = threading.Lock()        # protects boolean flags for UI
+        self._lock = threading.Lock()        # protects all shared state
         self._front_blocked = False
         self._rear_blocked = False
         self._running = False
@@ -55,6 +84,11 @@ class LidarMonitor:
         self.rear_lock = threading.Lock()
         self._front_lock_held = False
         self._rear_lock_held = False
+
+        # Wall-follower zone distances (min mm in zone, or None if no reading)
+        self._front_dist = None
+        self._right_dist = None
+        self._front_right_dist = None
 
     # ------------------------------------------------------------------
     # Public interface
@@ -69,6 +103,24 @@ class LidarMonitor:
     def rear_blocked(self):
         with self._lock:
             return self._rear_blocked
+
+    @property
+    def front_dist(self):
+        """Minimum distance (mm) in front zone, or None if no valid reading."""
+        with self._lock:
+            return self._front_dist
+
+    @property
+    def right_dist(self):
+        """Minimum distance (mm) in right zone (250-290°), or None if no valid reading."""
+        with self._lock:
+            return self._right_dist
+
+    @property
+    def front_right_dist(self):
+        """Minimum distance (mm) in front-right zone (290-340°), or None if no valid reading."""
+        with self._lock:
+            return self._front_right_dist
 
     def start(self):
         """Start the background scanning thread."""
@@ -123,10 +175,13 @@ class LidarMonitor:
 
                     new_front = False
                     new_rear = False
+                    wf_front_readings = []
+                    wf_right_readings = []
+                    wf_fr_readings = []
 
                     for (quality, angle, distance) in scan:
-                        # Skip low-quality or zero readings
-                        if quality == 0 or distance == 0:
+                        # Skip low-quality, zero, or out-of-range readings
+                        if quality == 0 or distance == 0 or distance > MAX_VALID_DIST_MM:
                             continue
 
                         if _in_front_zone(angle) and distance < STOP_DISTANCE_MM:
@@ -134,6 +189,19 @@ class LidarMonitor:
 
                         if _in_rear_zone(angle) and distance < STOP_DISTANCE_MM:
                             new_rear = True
+
+                        # Wall-follower zone accumulation
+                        if _in_wf_front_zone(angle):
+                            wf_front_readings.append(distance)
+                        if _in_wf_front_right_zone(angle):
+                            wf_fr_readings.append(distance)
+                        if _in_wf_right_zone(angle):
+                            wf_right_readings.append(distance)
+
+                    # --- Update wall-follower zone distances ---
+                    new_front_dist = min(wf_front_readings) if wf_front_readings else None
+                    new_right_dist = min(wf_right_readings) if wf_right_readings else None
+                    new_fr_dist    = min(wf_fr_readings)    if wf_fr_readings    else None
 
                     # --- Update front safety lock ---
                     if new_front and not self._front_lock_held:
@@ -151,12 +219,15 @@ class LidarMonitor:
                         self.rear_lock.release()
                         self._rear_lock_held = False
 
-                    # --- Update boolean flags for UI endpoint ---
+                    # --- Update boolean flags and zone distances ---
                     with self._lock:
                         prev_front = self._front_blocked
                         prev_rear = self._rear_blocked
                         self._front_blocked = new_front
                         self._rear_blocked = new_rear
+                        self._front_dist = new_front_dist
+                        self._right_dist = new_right_dist
+                        self._front_right_dist = new_fr_dist
 
                     # Only print on state change to reduce noise
                     if new_front != prev_front:
@@ -172,6 +243,9 @@ class LidarMonitor:
                 with self._lock:
                     self._front_blocked = False
                     self._rear_blocked = False
+                    self._front_dist = None
+                    self._right_dist = None
+                    self._front_right_dist = None
                 if self._lidar:
                     try:
                         self._lidar.stop()        # ← stop scanning
