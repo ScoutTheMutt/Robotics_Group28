@@ -185,7 +185,7 @@ class LidarMonitor:
                             continue
 
                         # Lidar is mounted flipped 180° — rotate angles to match physical frame
-                        angle = (angle - 180) % 360
+                        angle = (angle + 180) % 360
 
                         if _in_front_zone(angle) and distance < STOP_DISTANCE_MM:
                             new_front = True
