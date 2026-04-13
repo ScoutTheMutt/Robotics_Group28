@@ -28,8 +28,8 @@ WALL_LOST_MM     = 1200  # wall considered lost beyond this distance
 
 FRONT_STOP_MM    = 450   # stop forward motion if front closer than this
 
-BASE_SPEED       = 0.25  # nominal forward speed (0.0 – 1.0)
-STEER_ADJUST     = 0.08  # differential applied to each wheel for gentle steering
+BASE_SPEED       = .75  # nominal forward speed (0.0 – 1.0)
+STEER_ADJUST     = 0.15  # differential applied to each wheel for gentle steering
 TURN_SPEED       = 0.15  # speed when turning in place
 
 LOOP_HZ          = 10    # control loop rate
