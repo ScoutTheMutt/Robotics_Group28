@@ -21,15 +21,15 @@ import time
 # Tunable parameters — adjust these during testing
 # ---------------------------------------------------------------------------
 
-WALL_TARGET_MM   = 400   # desired distance from the right wall (mm)
+WALL_TARGET_MM   = 1500   # desired distance from the right wall (mm)
 WALL_LOWER_MM    = 300   # too close — steer away below this
-WALL_UPPER_MM    = 550   # too far  — steer toward above this
-WALL_LOST_MM     = 1200  # wall considered lost beyond this distance
+WALL_UPPER_MM    = 1000   # too far  — steer toward above this
+WALL_LOST_MM     = 2000  # wall considered lost beyond this distance
 
 FRONT_STOP_MM    = 450   # stop forward motion if front closer than this
 
-BASE_SPEED       = .75  # nominal forward speed (0.0 – 1.0)
-STEER_ADJUST     = 0.15  # differential applied to each wheel for gentle steering
+BASE_SPEED       = .40  # nominal forward speed (0.0 – 1.0)
+STEER_ADJUST     = 0.08  # differential applied to each wheel for gentle steering
 TURN_SPEED       = 0.15  # speed when turning in place
 
 LOOP_HZ          = 10    # control loop rate
