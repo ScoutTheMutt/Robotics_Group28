@@ -125,10 +125,8 @@ class WallFollower:
         if right is None or right > WALL_LOST_MM:
             return 'SEARCH'
 
-        # Case 2: too close (also check front-right so we react early to corners)
+        # Case 2: too close
         if right < WALL_LOWER_MM:
-            return 'STEER_AWAY'
-        if fr is not None and fr < WALL_LOWER_MM:
             return 'STEER_AWAY'
 
         # Case 3: too far

@@ -551,6 +551,10 @@
                     <div class="wf-dist-label">Right</div>
                     <div class="wf-dist-value" id="wf-right">—</div>
                 </div>
+                <div class="wf-dist-item">
+                    <div class="wf-dist-label">Rear-Right</div>
+                    <div class="wf-dist-value" id="wf-rear-right">—</div>
+                </div>
             </div>
         </div>
 
@@ -942,6 +946,7 @@
                 document.getElementById('wf-front').textContent       = fmt(data.front_dist);
                 document.getElementById('wf-front-right').textContent = fmt(data.front_right_dist);
                 document.getElementById('wf-right').textContent       = fmt(data.right_dist);
+                document.getElementById('wf-rear-right').textContent  = fmt(data.rear_right_dist);
             })
             .catch(() => {});
         }, 500);

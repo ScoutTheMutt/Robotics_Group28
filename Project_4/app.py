@@ -282,8 +282,9 @@ def wall_follow_status():
     return jsonify(
         state=wall_follower.state,
         front_dist=lidar.front_dist,
-        right_dist=lidar.right_dist,
         front_right_dist=lidar.front_right_dist,
+        right_dist=lidar.right_dist,
+        rear_right_dist=lidar.rear_right_dist,
     )
 
 
