@@ -229,6 +229,93 @@
             text-align: center;
         }
 
+        /* ---- Wall Follower Styles ---- */
+        .wall-follower-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            margin-bottom: 20px;
+        }
+
+        .wall-follower-section h2 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .wf-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .wf-start-btn {
+            background: rgba(50, 205, 50, 0.35);
+            font-weight: bold;
+            padding: 14px 28px;
+        }
+
+        .wf-start-btn:hover { background: rgba(50, 205, 50, 0.55); }
+
+        .wf-stop-btn {
+            background: rgba(255, 71, 87, 0.35);
+            font-weight: bold;
+            padding: 14px 28px;
+        }
+
+        .wf-stop-btn:hover { background: rgba(255, 71, 87, 0.55); }
+
+        .wf-state-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.35);
+            min-width: 100px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .wf-state-badge.running {
+            background: rgba(50, 205, 50, 0.35);
+            border-color: #32cd32;
+        }
+
+        .wf-state-badge.stopped {
+            background: rgba(128, 128, 128, 0.3);
+            border-color: gray;
+        }
+
+        .wf-distances {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .wf-dist-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 10px 16px;
+            min-width: 110px;
+            text-align: center;
+        }
+
+        .wf-dist-label {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .wf-dist-value {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
         /* ---- Dialog Engine Styles ---- */
         .dialog-section {
             background: rgba(255, 255, 255, 0.1);
@@ -438,6 +525,32 @@
                 <button onclick="speak('Please do not touch my wheels')">Warning</button>
                 <button onclick="speak('Hunter is the greatest')">Greatest</button>
                 <button class="emergency-stop" onclick="emergencyStop()">EMERGENCY STOP</button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             Wall Follower Section
+             ============================================================ -->
+        <div class="wall-follower-section">
+            <h2>Autonomous Wall Follower</h2>
+            <div class="wf-controls">
+                <button class="wf-start-btn" onclick="wallFollowStart()">Start Wall Follow</button>
+                <button class="wf-stop-btn" onclick="wallFollowStop()">Stop Wall Follow</button>
+                <span class="wf-state-badge stopped" id="wf-state-badge">STOPPED</span>
+            </div>
+            <div class="wf-distances">
+                <div class="wf-dist-item">
+                    <div class="wf-dist-label">Front</div>
+                    <div class="wf-dist-value" id="wf-front">—</div>
+                </div>
+                <div class="wf-dist-item">
+                    <div class="wf-dist-label">Front-Right</div>
+                    <div class="wf-dist-value" id="wf-front-right">—</div>
+                </div>
+                <div class="wf-dist-item">
+                    <div class="wf-dist-label">Right</div>
+                    <div class="wf-dist-value" id="wf-right">—</div>
+                </div>
             </div>
         </div>
 
@@ -785,6 +898,53 @@
         }
 
         fetchState();
+
+        // ================================================================
+        // Wall Follower
+        // ================================================================
+        const wfBadge = document.getElementById('wf-state-badge');
+
+        function updateWfBadge(state) {
+            wfBadge.textContent = state || 'STOPPED';
+            wfBadge.className = 'wf-state-badge';
+            wfBadge.classList.add(
+                (state && state !== 'STOPPED') ? 'running' : 'stopped'
+            );
+        }
+
+        function wallFollowStart() {
+            fetch('/wall_follow/start', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+            .then(r => r.json())
+            .then(data => {
+                updateWfBadge(data.state);
+                statusDiv.textContent = `Wall follower: ${data.state}`;
+            })
+            .catch(e => statusDiv.textContent = `Wall follow error: ${e}`);
+        }
+
+        function wallFollowStop() {
+            fetch('/wall_follow/stop', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+            .then(r => r.json())
+            .then(data => {
+                updateWfBadge(data.state);
+                statusDiv.textContent = `Wall follower: ${data.state}`;
+            })
+            .catch(e => statusDiv.textContent = `Wall follow error: ${e}`);
+        }
+
+        // Poll wall follower status every 500ms
+        setInterval(() => {
+            fetch('/wall_follow/status')
+            .then(r => r.json())
+            .then(data => {
+                updateWfBadge(data.state);
+                const fmt = v => (v != null && v < 9999) ? v.toFixed(0) + ' mm' : '—';
+                document.getElementById('wf-front').textContent       = fmt(data.front_dist);
+                document.getElementById('wf-front-right').textContent = fmt(data.front_right_dist);
+                document.getElementById('wf-right').textContent       = fmt(data.right_dist);
+            })
+            .catch(() => {});
+        }, 500);
     </script>
 </body>
 </html>
