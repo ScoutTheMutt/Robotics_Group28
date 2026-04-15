@@ -141,25 +141,16 @@ class WallFollower:
 
     def _execute(self, state):
         if state == 'FORWARD':
-<<<<<<< Updated upstream
             # Both wheels forward at base speed
             self._robot.setWheelSpeedsRaw(0.5, 0.5)
 
         elif state == 'STEER_AWAY':
             # Curve left: left wheel slower, right wheel faster
             self._robot.setWheelSpeedsRaw(0.3, 0.7)
+
         elif state == 'STEER_TOWARD':
             # Curve right: left wheel faster, right wheel slower
             self._robot.setWheelSpeedsRaw(0.7, 0.3)
-=======
-            self._robot.setWheelSpeeds(BASE_SPEED, BASE_SPEED)
-
-        elif state == 'STEER_AWAY':
-            self._robot.setWheelSpeeds(BASE_SPEED - STEER_ADJUST, BASE_SPEED + STEER_ADJUST)
-
-        elif state == 'STEER_TOWARD':
-            self._robot.setWheelSpeeds(BASE_SPEED + STEER_ADJUST, BASE_SPEED - STEER_ADJUST)
->>>>>>> Stashed changes
 
         elif state == 'OBSTACLE_AVOID':
             # Turn left in place until front clears
