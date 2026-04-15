@@ -145,12 +145,12 @@ class WallFollower:
             self._robot.setWheelSpeedsRaw(-0.5, -0.5)
 
         elif state == 'STEER_AWAY':
-            # Away from right wall = curve left: left faster forward (more negative)
-            self._robot.setWheelSpeedsRaw(-0.7, -0.3)
+            # Slow down + gentle curve away from right wall
+            self._robot.setWheelSpeedsRaw(-0.55, -0.35)
 
         elif state == 'STEER_TOWARD':
-            # Toward right wall = curve right: right faster forward (more negative)
-            self._robot.setWheelSpeedsRaw(-0.3, -0.7)
+            # Slow down + gentle curve toward right wall
+            self._robot.setWheelSpeedsRaw(-0.35, -0.55)
 
         elif state == 'OBSTACLE_AVOID':
             # Turn left in place until front clears
