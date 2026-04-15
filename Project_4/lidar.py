@@ -197,8 +197,8 @@ class LidarMonitor:
                         if quality == 0 or distance == 0 or distance > MAX_VALID_DIST_MM:
                             continue
 
-                        # Lidar is mounted flipped 180° — rotate angles to match physical frame
-                        angle = (angle + 180) % 360
+                        # Lidar is mounted flipped — mirror+rotate to match physical frame
+                        angle = (180 - angle) % 360
 
                         if _in_front_zone(angle) and distance < STOP_DISTANCE_MM:
                             new_front = True
