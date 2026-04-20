@@ -21,12 +21,12 @@ import time
 # Tunable parameters — adjust these during testing
 # ---------------------------------------------------------------------------
 
-WALL_TARGET_MM   = 480   # desired distance from the right wall (mm)
+WALL_TARGET_MM   = 500   # desired distance from the right wall (mm)
 WALL_LOWER_MM    = 300   # too close — steer away below this
 WALL_UPPER_MM    = 1000   # too far  — steer toward above this
 WALL_LOST_MM     = 1001  # wall considered lost beyond this distance
 
-FRONT_STOP_MM    = 450   # stop forward motion if front closer than this
+FRONT_STOP_MM    = 600   # stop forward motion if front closer than this
 
 BASE_SPEED       = .40  # nominal forward speed (0.0 – 1.0)
 STEER_ADJUST     = 0.08  # differential applied to each wheel for gentle steering
@@ -86,7 +86,6 @@ class WallFollower:
     # ------------------------------------------------------------------
 
     def _loop(self):
-        interval = 1.0 / LOOP_HZ
 
         while True:
             with self._lock:
@@ -108,7 +107,6 @@ class WallFollower:
                       f"front={_fmt(front)}  right={_fmt(right)}  fr={_fmt(fr)}")
 
             self._execute(new_state)
-            time.sleep(interval)
 
         self._robot.stop()
 
