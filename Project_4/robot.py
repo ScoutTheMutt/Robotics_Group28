@@ -99,7 +99,7 @@ class Robot:
 
     def driveForward(self, speed=0.15):
         speed = max(0.0, min(0.75, speed))
-        self.setWheelSpeeds(speed, speed)
+        self.setWheelSpeedsRaw(speed, speed)
 
     def driveBackward(self, speed=0.15):
         speed = max(0.0, min(0.75, speed))
