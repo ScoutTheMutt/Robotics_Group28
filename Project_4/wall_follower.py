@@ -123,8 +123,8 @@ class WallFollower:
         if right is None or right > WALL_LOST_MM:
             return 'SEARCH'
 
-        # Case 2: too close
-        if right < WALL_LOWER_MM:
+        # Case 2: too close (right or front-right zone)
+        if right < WALL_LOWER_MM or (fr is not None and fr < WALL_LOWER_MM):
             return 'STEER_AWAY'
 
         # Case 3: too far
@@ -139,27 +139,24 @@ class WallFollower:
 
     def _execute(self, state):
         if state == 'FORWARD':
-            # Negative = physical forward
-            self._robot.setWheelSpeedsRaw(1, 1)
-
+            # Negative = physical forward on this robot
+            self._robot.setWheelSpeedsRaw(-BASE_SPEED, -BASE_SPEED)
 
         elif state == 'STEER_AWAY':
-            # Away from right wall = curve left: left faster forward (more negative)
-            self._robot.setWheelSpeedsRaw(-0.3, 0.7)
+            # Curve left (away from right wall): right wheel faster forward (more negative)
+            self._robot.setWheelSpeedsRaw(0.3, -0.7)
 
         elif state == 'STEER_TOWARD':
-            # Toward right wall = curve right: right faster forward (more negative)
-            self._robot.setWheelSpeedsRaw(0.7, -0.3)
+            # Curve right (toward right wall): left wheel faster forward (more negative)
+            self._robot.setWheelSpeedsRaw(-0.7, 0.3)
 
         elif state == 'OBSTACLE_AVOID':
-            # Turn left in place until front clears
-            self._robot.setWheelSpeeds(
-                -TURN_SPEED,
-                TURN_SPEED,
-            )
+            # Turn left in place: right wheel forward (negative), left backward (positive)
+            self._robot.setWheelSpeeds(TURN_SPEED, -TURN_SPEED)
+
         elif state == 'SEARCH':
-            # Arc right to find the wall — both wheels forward, left faster
-            self._robot.setWheelSpeeds(-BASE_SPEED, -BASE_SPEED)
+            # Arc right to find the wall — both forward (negative), left slightly faster
+            self._robot.setWheelSpeeds(-BASE_SPEED, -BASE_SPEED * 0.6)
 
         # STOPPED — no motor command; robot.stop() was already called
 
