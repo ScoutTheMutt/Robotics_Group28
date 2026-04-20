@@ -86,6 +86,7 @@ class WallFollower:
     # ------------------------------------------------------------------
 
     def _loop(self):
+        interval = 1.0 / LOOP_HZ
 
         while True:
             with self._lock:
@@ -107,6 +108,7 @@ class WallFollower:
                       f"front={_fmt(front)}  right={_fmt(right)}  fr={_fmt(fr)}")
 
             self._execute(new_state)
+            time.sleep(interval)
 
         self._robot.stop()
 
@@ -139,27 +141,31 @@ class WallFollower:
 
     def _execute(self, state):
         if state == 'FORWARD':
-            # Negative = physical forward
-            self._robot.setWheelSpeedsRaw(1, 1)
-
+            # Positive = physical forward (both wheels forward at same speed)
+            print("[WALL-DEBUG] FORWARD: both wheels 0.5")
+            self._robot.setWheelSpeedsRaw(0.5, 0.5)
 
         elif state == 'STEER_AWAY':
-            # Away from right wall = curve left: left faster forward (more negative)
-            self._robot.setWheelSpeedsRaw(-0.3, 0.7)
+            # Away from right wall = curve left: left faster forward (more positive)
+            print("[WALL-DEBUG] STEER_AWAY: left 0.7, right 0.3")
+            self._robot.setWheelSpeedsRaw(0.7, 0.3)
 
         elif state == 'STEER_TOWARD':
-            # Toward right wall = curve right: right faster forward (more negative)
-            self._robot.setWheelSpeedsRaw(0.7, -0.3)
+            # Toward right wall = curve right: right faster forward (more positive)
+            print("[WALL-DEBUG] STEER_TOWARD: left 0.3, right 0.7")
+            self._robot.setWheelSpeedsRaw(0.3, 0.7)
 
         elif state == 'OBSTACLE_AVOID':
             # Turn left in place until front clears
+            print("[WALL-DEBUG] OBSTACLE_AVOID: turning left")
             self._robot.setWheelSpeeds(
                 -TURN_SPEED,
                 TURN_SPEED,
             )
         elif state == 'SEARCH':
             # Arc right to find the wall — both wheels forward, left faster
-            self._robot.setWheelSpeeds(-BASE_SPEED, -BASE_SPEED)
+            print("[WALL-DEBUG] SEARCH: arcing right to find wall")
+            self._robot.setWheelSpeeds(BASE_SPEED, BASE_SPEED * 0.4)
 
         # STOPPED — no motor command; robot.stop() was already called
 

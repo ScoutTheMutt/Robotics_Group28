@@ -39,7 +39,8 @@ class Motor:
         else:
             # Reverse
             position = int(self.stop_position + speed * (self.stop_position - self.min_position))
-            
+        
+        print(f"[MOTOR-DEBUG] Channel {self.channel}: speed={speed:.2f} → position={position}")
         self.maestro.setTarget(self.channel, position)
         self.current_speed = speed
         
