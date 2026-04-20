@@ -140,8 +140,7 @@ class WallFollower:
     def _execute(self, state):
         if state == 'FORWARD':
             # Negative = physical forward
-            # self._robot.setWheelSpeedsRaw(0.6, 0.6)
-            self._robot.driveForward()
+            self._robot.setWheelSpeedsRaw(1, 1)
 
 
         elif state == 'STEER_AWAY':
