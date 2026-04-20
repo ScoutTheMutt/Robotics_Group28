@@ -21,8 +21,8 @@ import time
 # Tunable parameters — adjust these during testing
 # ---------------------------------------------------------------------------
 
-WALL_TARGET_MM   = 1750   # desired distance from the right wall (mm)
-WALL_LOWER_MM    = 700   # too close — steer away below this
+WALL_TARGET_MM   = 1000   # desired distance from the right wall (mm)
+WALL_LOWER_MM    = 400   # too close — steer away below this
 WALL_UPPER_MM    = 2000   # too far  — steer toward above this
 WALL_LOST_MM     = 2100  # wall considered lost beyond this distance
 
