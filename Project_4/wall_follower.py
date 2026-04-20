@@ -29,6 +29,7 @@ WALL_LOST_MM     = 1001  # wall considered lost beyond this distance
 FRONT_STOP_MM    = 600   # stop forward motion if front closer than this
 
 BASE_SPEED       = .40  # nominal forward speed (0.0 – 1.0)
+RIGHT_TRIM       = 0.30  # right motor deadband compensation — right needs ~0.60 min to spin
 STEER_ADJUST     = 0.08  # differential applied to each wheel for gentle steering
 TURN_SPEED       = 0.15  # speed when turning in place
 
@@ -141,14 +142,14 @@ class WallFollower:
 
     def _execute(self, state):
         if state == 'FORWARD':
-            # Positive = physical forward (both wheels forward at same speed)
-            print("[WALL-DEBUG] FORWARD: both wheels 0.5")
-            self._robot.setWheelSpeedsRaw(-.7, -0.3)
+            # Negative = physical forward; RIGHT_TRIM compensates right motor deadband
+            print("[WALL-DEBUG] FORWARD: both wheels forward")
+            self._robot.setWheelSpeedsRaw(-0.7, -(0.3 + RIGHT_TRIM))
 
         elif state == 'STEER_AWAY':
-            # Away from right wall = curve left: left faster forward (more positive)
-            print("[WALL-DEBUG] STEER_AWAY: left 0.7, right 0.3")
-            self._robot.setWheelSpeedsRaw(0.2, -0.4)
+            # Curve left: right wheel faster forward (more negative), left slower
+            print("[WALL-DEBUG] STEER_AWAY: curving left")
+            self._robot.setWheelSpeedsRaw(0.2, -(0.4 + RIGHT_TRIM))
 
         elif state == 'STEER_TOWARD':
             # Toward right wall = curve right: right faster forward (more positive)
