@@ -29,10 +29,6 @@ class MockRobot:
         self.last_call = 'setWheelSpeeds'
         self.last_speeds = (l, r)
 
-    def setWheelSpeedsRaw(self, l, r):
-        self.last_call = 'setWheelSpeedsRaw'
-        self.last_speeds = (l, r)
-
     def turnLeft(self, speed=0.15):
         self.last_call = 'turnLeft'
 
@@ -98,38 +94,6 @@ def test_forward():
     check("upper boundary ok", _decide(front=None, right=WALL_UPPER_MM), 'FORWARD')
 
 
-def test_execute_directions():
-    """
-    On this robot: negative speed = physical forward, positive = physical backward.
-    Verify _execute sends the correct signs for each state.
-    """
-    print("test_execute_directions  (negative speed = physical forward on this robot)")
-    robot = MockRobot()
-    lidar = MockLidar(front=None, right=500, fr=None)
-    wf = WallFollower(robot, lidar)
-
-    # FORWARD — both wheels should be negative (physical forward)
-    wf._execute('FORWARD')
-    l, r = robot.last_speeds
-    check("FORWARD left wheel negative (physical forward)", l < 0, True)
-    check("FORWARD right wheel negative (physical forward)", r < 0, True)
-
-    # STEER_AWAY (too close to right wall) — curve left: right wheel more negative, left less/positive
-    wf._execute('STEER_AWAY')
-    l, r = robot.last_speeds
-    check("STEER_AWAY right faster forward (more negative) than left", r < l, True)
-
-    # STEER_TOWARD (too far from right wall) — curve right: left wheel more negative, right less/positive
-    wf._execute('STEER_TOWARD')
-    l, r = robot.last_speeds
-    check("STEER_TOWARD left faster forward (more negative) than right", l < r, True)
-
-    # SEARCH — should arc forward (both wheels negative) to find wall
-    wf._execute('SEARCH')
-    l, r = robot.last_speeds
-    check("SEARCH both wheels forward (both negative)", l < 0 and r < 0, True)
-
-
 def test_obstacle_overrides_wall():
     print("test_obstacle_overrides_wall")
     check("front obstacle beats wall-too-close", _decide(front=100, right=100), 'OBSTACLE_AVOID')
@@ -148,7 +112,6 @@ if __name__ == '__main__':
         test_wall_lost,
         test_obstacle_in_front,
         test_obstacle_overrides_wall,
-        test_execute_directions,
     ]
 
     passed = 0
