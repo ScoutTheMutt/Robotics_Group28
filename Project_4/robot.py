@@ -97,7 +97,7 @@ class Robot:
         self.left_motor.setSpeed(left_speed)
         self.right_motor.setSpeed(right_speed)
 
-    def driveForward(self, speed=0.15):
+    def driveForward(self, speed=0.45):
         speed = max(0.0, min(0.75, speed))
         self.setWheelSpeedsRaw(speed, speed)
 
