@@ -143,7 +143,7 @@ class WallFollower:
         # Left(Ch0): negative=forward. Right(Ch1): positive=forward.
         if state == 'FORWARD':
             print("[WALL-DEBUG] FORWARD")
-            self._robot.setWheelSpeedsRaw(0.6, 0.6)
+            self._robot.setWheelSpeedsRaw(-0.7, -0.7)
 
         elif state == 'STEER_AWAY':
             # Curve left: left backward, right forward fast
