@@ -142,7 +142,7 @@ class WallFollower:
     def _execute(self, state):
         if state == 'FORWARD':
             print("[WALL-DEBUG] FORWARD: both wheels 0.5")
-            self._robot.setWheelSpeedsRaw(-.2, 0.6)
+            self._robot.setWheelSpeedsRaw(.2, 0.6)
 
         elif state == 'STEER_AWAY':
             print("[WALL-DEBUG] STEER_AWAY: left 0.7, right 0.3")
