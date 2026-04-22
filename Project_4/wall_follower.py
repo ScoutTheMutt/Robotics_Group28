@@ -22,7 +22,7 @@ import time
 # ---------------------------------------------------------------------------
 
 WALL_TARGET_MM   = 500   # desired distance from the right wall (mm)
-WALL_LOWER_MM    = 300   # too close — steer away below this
+WALL_LOWER_MM    = 500   # too close — steer away below this
 WALL_UPPER_MM    = 1000   # too far  — steer toward above this
 WALL_LOST_MM     = 1001  # wall considered lost beyond this distance
 
