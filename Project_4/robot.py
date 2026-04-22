@@ -95,7 +95,7 @@ class Robot:
     def setWheelSpeedsRaw(self, left_speed, right_speed):
         """Set wheel speeds without any safety checks (for testing)."""
         self.left_motor.setSpeed(left_speed)
-        self.right_motor.setSpeed(right_speed*2)
+        self.right_motor.setSpeed(right_speed)
 
     def driveForward(self, speed=0.15):
         speed = max(0.0, min(0.75, speed))
