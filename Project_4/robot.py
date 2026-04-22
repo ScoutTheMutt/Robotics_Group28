@@ -23,8 +23,9 @@ class Robot:
         self.maestro = Controller()
 
         # Drive motors: ch0 = left, ch1 = right
-        self.left_motor = Motor(self.maestro, channel=0)
-        self.right_motor = Motor(self.maestro, channel=1)
+        # Left motor needs 2.5x multiplier to match right motor output
+        self.left_motor = Motor(self.maestro, channel=0, speed_multiplier=2.5)
+        self.right_motor = Motor(self.maestro, channel=1, speed_multiplier=1.0)
 
         # Waist rotation (hardware center is -35°)
         waist_center = 6000 - int((35.0 / 90.0) * 2000)
@@ -98,20 +99,24 @@ class Robot:
         self.right_motor.setSpeed(right_speed)
 
     def driveForward(self, speed=0.15):
+        """Drive forward. Left motor needs negative, right motor needs positive."""
         speed = max(0.0, min(0.75, speed))
-        self.setWheelSpeedsRaw(speed, speed)
+        self.setWheelSpeedsRaw(-speed, speed)
 
     def driveBackward(self, speed=0.15):
-        speed = max(0.0, min(0.75, speed))
-        self.setWheelSpeeds(-speed, -speed)
-
-    def turnLeft(self, speed=0.05):
-        speed = max(0.0, min(0.75, speed))
-        self.setWheelSpeeds(-speed, speed)
-
-    def turnRight(self, speed=0.05):
+        """Drive backward. Left motor needs positive, right motor needs negative."""
         speed = max(0.0, min(0.75, speed))
         self.setWheelSpeeds(speed, -speed)
+
+    def turnLeft(self, speed=0.05):
+        """Turn left in place. Left backward, right forward."""
+        speed = max(0.0, min(0.75, speed))
+        self.setWheelSpeeds(speed, speed)
+
+    def turnRight(self, speed=0.05):
+        """Turn right in place. Left forward, right backward."""
+        speed = max(0.0, min(0.75, speed))
+        self.setWheelSpeeds(-speed, -speed)
 
     def stop(self):
         """EMERGENCY STOP — halt all wheel motion."""

@@ -100,34 +100,37 @@ def test_forward():
 
 def test_execute_directions():
     """
-    On this robot: negative speed = physical forward, positive = physical backward.
+    On this robot: LEFT motor (ch0) negative=forward, RIGHT motor (ch1) positive=forward.
     Verify _execute sends the correct signs for each state.
     """
-    print("test_execute_directions  (negative speed = physical forward on this robot)")
+    print("test_execute_directions  (LEFT: negative=forward, RIGHT: positive=forward)")
     robot = MockRobot()
     lidar = MockLidar(front=None, right=500, fr=None)
     wf = WallFollower(robot, lidar)
 
-    # FORWARD — both wheels should be negative (physical forward)
+    # FORWARD — left negative, right positive (both physical forward)
     wf._execute('FORWARD')
     l, r = robot.last_speeds
     check("FORWARD left wheel negative (physical forward)", l < 0, True)
-    check("FORWARD right wheel negative (physical forward)", r < 0, True)
+    check("FORWARD right wheel positive (physical forward)", r > 0, True)
 
-    # STEER_AWAY (too close to right wall) — curve left: right wheel more negative, left less/positive
+    # STEER_AWAY (too close to right wall) — curve left: slow left forward, fast right forward
     wf._execute('STEER_AWAY')
     l, r = robot.last_speeds
-    check("STEER_AWAY right faster forward (more negative) than left", r < l, True)
+    check("STEER_AWAY left forward (negative)", l < 0, True)
+    check("STEER_AWAY right faster forward than left", r > abs(l), True)
 
-    # STEER_TOWARD (too far from right wall) — curve right: left wheel more negative, right less/positive
+    # STEER_TOWARD (too far from right wall) — curve right: fast left forward, slow right forward
     wf._execute('STEER_TOWARD')
     l, r = robot.last_speeds
-    check("STEER_TOWARD left faster forward (more negative) than right", l < r, True)
+    check("STEER_TOWARD left forward faster", abs(l) > r, True)
+    check("STEER_TOWARD right forward (positive)", r > 0, True)
 
-    # SEARCH — should arc forward (both wheels negative) to find wall
+    # SEARCH — should arc forward (left negative, right positive) to find wall
     wf._execute('SEARCH')
     l, r = robot.last_speeds
-    check("SEARCH both wheels forward (both negative)", l < 0 and r < 0, True)
+    check("SEARCH left forward (negative)", l < 0, True)
+    check("SEARCH right forward (positive)", r > 0, True)
 
 
 def test_obstacle_overrides_wall():
