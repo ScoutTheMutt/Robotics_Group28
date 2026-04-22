@@ -23,6 +23,7 @@ from dialog_engine import DialogEngine, FatalParseError
 from action_runner import ActionRunner
 from lidar import LidarMonitor
 from wall_follower import WallFollower
+from greeter_controller import GreeterController
 
 app = Flask(__name__)
 
@@ -33,10 +34,11 @@ robot.set_lidar(lidar)
 lidar.start()
 
 wall_follower = WallFollower(robot, lidar)
+greeter = GreeterController(robot, lidar, wall_follower)
 
 # Initialize dialog engine and action runner
 engine = DialogEngine(seed=args.seed)
-action_runner = ActionRunner(robot)
+action_runner = ActionRunner(robot, greeter)
 
 # Load dialog script
 try:
@@ -47,6 +49,7 @@ except FatalParseError as e:
 
 
 def cleanup():
+    greeter.stop()
     wall_follower.stop()
     action_runner.cancel()
     robot.stop()
@@ -285,6 +288,53 @@ def wall_follow_status():
         front_right_dist=lidar.front_right_dist,
         right_dist=lidar.right_dist,
         rear_right_dist=lidar.rear_right_dist,
+    )
+
+
+# ===========================================================================
+# Project 4 — Autonomous greeter routes
+# ===========================================================================
+
+@app.route('/greeter/start', methods=['POST'])
+def greeter_start():
+    """Start the autonomous greeter controller."""
+    try:
+        greeter.start()
+        return jsonify(status="ok", state=greeter.state)
+    except Exception as e:
+        print(f"Greeter start error: {e}")
+        return jsonify(status="error", message=str(e)), 500
+
+
+@app.route('/greeter/stop', methods=['POST'])
+def greeter_stop():
+    """Stop the autonomous greeter controller."""
+    try:
+        greeter.stop()
+        return jsonify(status="ok", state=greeter.state)
+    except Exception as e:
+        print(f"Greeter stop error: {e}")
+        return jsonify(status="error", message=str(e)), 500
+
+
+@app.route('/greeter/reset', methods=['POST'])
+def greeter_reset():
+    """Reset greeter to IDLE for next greeting."""
+    try:
+        greeter.reset()
+        return jsonify(status="ok", state=greeter.state)
+    except Exception as e:
+        print(f"Greeter reset error: {e}")
+        return jsonify(status="error", message=str(e)), 500
+
+
+@app.route('/greeter/status', methods=['GET'])
+def greeter_status():
+    """Return current greeter state and destination."""
+    return jsonify(
+        state=greeter.state,
+        destination=greeter.destination,
+        running=True  # Add if needed to track if thread is active
     )
 
 

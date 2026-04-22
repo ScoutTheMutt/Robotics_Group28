@@ -50,7 +50,7 @@ def _parse_choice_list(content):
 
 class DialogEngine:
     # Known action tag names
-    KNOWN_ACTIONS = {'head_yes', 'head_no', 'arm_raise', 'dance90'}
+    KNOWN_ACTIONS = {'head_yes', 'head_no', 'arm_raise', 'dance90', 'start_greeter', 'stop_greeter'}
     # Max nesting depth (rules at level >= 6 are rejected; depth = level+1 > 6)
     MAX_LEVEL = 5
 

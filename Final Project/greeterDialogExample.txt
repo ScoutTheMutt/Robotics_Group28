@@ -1,0 +1,50 @@
+# ============================================================
+# Dialog Script with Greeter Actions
+# Purpose: Demonstrates how to activate greeter function
+# from the dialog engine
+# ============================================================
+
+# Definitions
+~greet: [hello hi howdy "hi there" "hey robot"]
+~bye: [bye goodbye "see ya" later]
+~affirm: [yes yeah yep sure "of course"]
+~deny: [no nope nah "no way"]
+~start_words: [start begin activate "get ready" "let's go"]
+~stop_words: [stop halt quit cancel "no more"]
+
+# ============================================================
+# Global control
+# ============================================================
+
+# Greeting rule - user can ask robot to greet people
+u:(~greet): Hello there! <head_yes>
+
+# Safety stop
+u:([stop cancel reset quit]): Stopping now.
+
+# ============================================================
+# Greeter Mode - Can be activated from dialog
+# ============================================================
+
+% User asks robot to start greeting people
+u:(~start_words): [Alright, I'll start greeting people!|Ready to greet!] <start_greeter>
+    u1:(~affirm): Great! <head_yes>
+    u1:(~deny): [No problem|Understood] <stop_greeter>
+    u1:([never mind]): Cancelling greeter mode. <stop_greeter>
+
+% Direct command to activate greeter
+u:([activate greeter]): Starting autonomous greeting mode. <start_greeter>
+
+% Direct command to deactivate greeter
+u:([deactivate greeter stop greeter]): Stopping autonomous greeting mode. <stop_greeter>
+
+% Example conversation within greeter mode
+u1:([what are you doing]): I'm in greeting mode, waiting for people to arrive.
+
+# ============================================================
+# Testing responses
+# ============================================================
+
+u:([how are you]): I'm doing great, thanks for asking!
+
+u:([test actions]): Testing all actions now. <head_yes> <head_no> <arm_raise>

@@ -16,10 +16,13 @@ class ActionRunner:
         'head_no': 3.0,
         'arm_raise': 4.0,
         'dance90': 6.0,
+        'start_greeter': 1.0,
+        'stop_greeter': 1.0,
     }
 
-    def __init__(self, robot):
+    def __init__(self, robot, greeter=None):
         self.robot = robot
+        self.greeter = greeter
         self.q = queue.Queue()
         self._cancel = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
@@ -67,6 +70,8 @@ class ActionRunner:
             'head_no': self._head_no,
             'arm_raise': self._arm_raise,
             'dance90': self._dance90,
+            'start_greeter': self._start_greeter,
+            'stop_greeter': self._stop_greeter,
         }.get(action_name)
 
         if handler is None:
@@ -199,3 +204,31 @@ class ActionRunner:
         finally:
             self.robot.stop()
             self.resume()
+
+    def _start_greeter(self):
+        """Start the autonomous greeter controller."""
+        if self.greeter is None:
+            print("[ACTION] Greeter not available")
+            return
+        if self._cancel.is_set():
+            return
+        try:
+            self.greeter.start()
+            print("[ACTION] Greeter started")
+        except Exception as e:
+            print(f"[ACTION] Error starting greeter: {e}")
+        self.resume()
+
+    def _stop_greeter(self):
+        """Stop the autonomous greeter controller."""
+        if self.greeter is None:
+            print("[ACTION] Greeter not available")
+            return
+        if self._cancel.is_set():
+            return
+        try:
+            self.greeter.stop()
+            print("[ACTION] Greeter stopped")
+        except Exception as e:
+            print(f"[ACTION] Error stopping greeter: {e}")
+        self.resume()
