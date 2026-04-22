@@ -28,7 +28,7 @@ WALL_LOST_MM     = 1001  # wall considered lost beyond this distance
 
 FRONT_STOP_MM    = 600   # stop forward motion if front closer than this
 
-BASE_SPEED       = .40  # nominal forward speed (0.0 – 1.0)
+BASE_SPEED       = .50  # nominal forward speed (0.0 – 1.0)
 STEER_ADJUST     = 0.08  # differential applied to each wheel for gentle steering
 TURN_SPEED       = 0.15  # speed when turning in place
 
@@ -142,7 +142,7 @@ class WallFollower:
     def _execute(self, state):
         if state == 'FORWARD':
             print("[WALL-DEBUG] FORWARD: both wheels 0.5")
-            self._robot.setWheelSpeedsRaw(-.6, -0.3)
+            self._robot.setWheelSpeedsRaw(-.6, 0.6)
 
         elif state == 'STEER_AWAY':
             print("[WALL-DEBUG] STEER_AWAY: left 0.7, right 0.3")
