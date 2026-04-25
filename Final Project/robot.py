@@ -23,8 +23,10 @@ class Robot:
         self.maestro = Controller()
 
         # Drive motors: ch0 = left, ch1 = right
-        self.left_motor = Motor(self.maestro, channel=0)
-        self.right_motor = Motor(self.maestro, channel=1)
+        # Left motor requires 3.0x multiplier to compensate for physical weakness
+        # AND inverted=True because it's physically wired backwards
+        self.left_motor = Motor(self.maestro, channel=0, speed_multiplier=3.0, inverted=True)
+        self.right_motor = Motor(self.maestro, channel=1, speed_multiplier=1.0)
 
         # Waist rotation (hardware center is -35°)
         waist_center = 6000 - int((35.0 / 90.0) * 2000)
@@ -47,6 +49,33 @@ class Robot:
         self._lidar = None
 
         self.stop()
+
+    # ------------------------------------------------------------------
+    # Calibration testing
+    # ------------------------------------------------------------------
+
+    def testCalibration(self, test_speed=0.2, duration=3.0):
+        """
+        Test motor calibration by running both wheels at the same commanded speed.
+        Visually observe if robot drives straight or veers to one side.
+
+        Args:
+            test_speed: Speed to test (0.0 to 1.0), default 0.2 (20% power)
+            duration: How long to run test in seconds, default 3.0
+        """
+        import time
+        print(f"[CALIBRATION TEST] Running both motors at {test_speed} for {duration}s")
+        print(f"[CALIBRATION TEST] Left multiplier: {self.left_motor.speed_multiplier}x")
+        print(f"[CALIBRATION TEST] Right multiplier: {self.right_motor.speed_multiplier}x")
+        print(f"[CALIBRATION TEST] Watch robot: should drive straight if calibrated correctly")
+
+        self.setWheelSpeeds(test_speed, test_speed)
+        time.sleep(duration)
+        self.stop()
+
+        print(f"[CALIBRATION TEST] Complete. Did robot drive straight?")
+        print(f"  - Veered RIGHT → left motor too weak, INCREASE left multiplier")
+        print(f"  - Veered LEFT → left motor too strong, DECREASE left multiplier")
 
     # ------------------------------------------------------------------
     # Lidar integration

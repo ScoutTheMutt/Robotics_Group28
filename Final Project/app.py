@@ -98,6 +98,21 @@ def stop():
         return jsonify(status="error", message=str(e)), 500
 
 
+@app.route('/calibrate', methods=['POST'])
+def calibrate():
+    """Test motor calibration - both wheels same speed."""
+    try:
+        data = request.get_json() or {}
+        speed = float(data.get('speed', 0.2))
+        duration = float(data.get('duration', 3.0))
+        robot.testCalibration(test_speed=speed, duration=duration)
+        return jsonify(status='calibration test complete')
+    except Exception as e:
+        print(f"Calibration error: {e}")
+        robot.stop()
+        return jsonify(status="error", message=str(e)), 500
+
+
 @app.route('/head/pan', methods=['POST'])
 def head_pan():
     try:

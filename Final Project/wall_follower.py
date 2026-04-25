@@ -21,16 +21,16 @@ import time
 # Tunable parameters — adjust these during testing
 # ---------------------------------------------------------------------------
 
-WALL_TARGET_MM   = 1750   # desired distance from the right wall (mm)
-WALL_LOWER_MM    = 700   # too close — steer away below this
-WALL_UPPER_MM    = 2000   # too far  — steer toward above this
-WALL_LOST_MM     = 2100  # wall considered lost beyond this distance
+WALL_TARGET_MM   = 600   # desired distance from the right wall (mm)
+WALL_LOWER_MM    = 500   # too close — steer away below this
+WALL_UPPER_MM    = 700   # too far  — steer toward above this
+WALL_LOST_MM     = 701  # wall considered lost beyond this distance
 
 FRONT_STOP_MM    = 450   # stop forward motion if front closer than this
 
-BASE_SPEED       = .40  # nominal forward speed (0.0 – 1.0)
+BASE_SPEED       = 0.16  # nominal forward speed (0.0 – 1.0) — reduced to 40%
 STEER_ADJUST     = 0.08  # differential applied to each wheel for gentle steering
-TURN_SPEED       = 0.15  # speed when turning in place
+TURN_SPEED       = 0.06  # speed when turning in place — reduced to 40%
 
 LOOP_HZ          = 10    # control loop rate
 
@@ -141,17 +141,20 @@ class WallFollower:
 
     def _execute(self, state):
         if state == 'FORWARD':
-            # Negative = physical forward
-            self._robot.setWheelSpeedsRaw(0.5, 0.4)
+            # Both wheels forward - left needs higher speed for calibration
+            self._robot.setWheelSpeedsRaw(.14, 0.12)
 
         elif state == 'STEER_AWAY':
-            # Away from right wall = curve left: left faster forward (more negative)
-            self._robot.setWheelSpeedsRaw(0.3, 0.7)
+            # Curve left (away from wall): left slower, right faster
+            left_speed = BASE_SPEED + STEER_ADJUST  # 0.16 - 0.08 = 0.08
+            right_speed = BASE_SPEED - STEER_ADJUST  # 0.16 + 0.08 = 0.24
+            self._robot.setWheelSpeedsRaw(0.14,-.15)
 
         elif state == 'STEER_TOWARD':
-            # Toward right wall = curve right: right faster forward (more negative)
-            self._robot.setWheelSpeedsRaw(0.7, 0.3)
-
+            # Curve right (toward wall): left faster, right slower
+            left_speed = BASE_SPEED + STEER_ADJUST  # 0.16 + 0.08 = 0.24
+            right_speed = BASE_SPEED - STEER_ADJUST  # 0.16 - 0.08 = 0.08
+            self._robot.setWheelSpeedsRaw(0.14,.15)
         elif state == 'OBSTACLE_AVOID':
             # Turn left in place until front clears
             self._robot.setWheelSpeeds(
@@ -159,8 +162,8 @@ class WallFollower:
                 TURN_SPEED,
             )
         elif state == 'SEARCH':
-            # Arc right to find the wall — both wheels forward, left faster
-            self._robot.setWheelSpeeds(BASE_SPEED, BASE_SPEED * 0.4)
+            # Arc right to find the wall: left faster, right slower
+            self._robot.setWheelSpeedsRaw(0.18, .25)
 
         # STOPPED — no motor command; robot.stop() was already called
 

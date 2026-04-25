@@ -4,34 +4,47 @@ Controls drive motors through servo channels
 """
 
 class Motor:
-    def __init__(self, maestro, channel, stop_position=6000, min_position=4000, max_position=8000):
+    def __init__(self, maestro, channel, stop_position=6000, min_position=4000, max_position=8000, speed_multiplier=1.0, inverted=False):
         """
         Initialize a motor controller
-        
+
         Args:
             maestro: Maestro controller instance
             channel: Servo channel for this motor
             stop_position: Position that stops the motor
             min_position: Full reverse position
             max_position: Full forward position
+            speed_multiplier: Hardware compensation multiplier (default 1.0)
+            inverted: If True, flip speed sign before multiplier (for reversed wiring)
         """
         self.maestro = maestro
         self.channel = channel
         self.stop_position = stop_position
         self.min_position = min_position
         self.max_position = max_position
+        self.speed_multiplier = speed_multiplier
+        self.inverted = inverted
         self.current_speed = 0
         
     def setSpeed(self, speed):
         """
         Set motor speed
-        
+
         Args:
             speed: Speed from -1.0 (full reverse) to 1.0 (full forward)
         """
-        # Clamp speed
+        self.current_speed = speed
+
+        # Apply hardware inversion BEFORE multiplier (order matters!)
+        if self.inverted:
+            speed = -speed
+
+        # Apply hardware compensation multiplier
+        speed = speed * self.speed_multiplier
+
+        # Clamp speed to valid range after multiplication
         speed = max(-1.0, min(1.0, speed))
-        
+
         # Map speed to position
         if speed >= 0:
             # Forward
@@ -39,9 +52,8 @@ class Motor:
         else:
             # Reverse
             position = int(self.stop_position + speed * (self.stop_position - self.min_position))
-            
+
         self.maestro.setTarget(self.channel, position)
-        self.current_speed = speed
         
     def stop(self):
         """Stop the motor"""
