@@ -21,10 +21,10 @@ import time
 # Tunable parameters — adjust these during testing
 # ---------------------------------------------------------------------------
 
-WALL_TARGET_MM   = 600   # desired distance from the right wall (mm)
-WALL_LOWER_MM    = 500   # too close — steer away below this
-WALL_UPPER_MM    = 700   # too far  — steer toward above this
-WALL_LOST_MM     = 701  # wall considered lost beyond this distance
+WALL_TARGET_MM   = 800   # desired distance from the right wall (mm)
+WALL_LOWER_MM    = 600   # too close — steer away below this
+WALL_UPPER_MM    = 1000   # too far  — steer toward above this
+WALL_LOST_MM     = 2001  # wall considered lost beyond this distance
 
 FRONT_STOP_MM    = 450   # stop forward motion if front closer than this
 
@@ -96,6 +96,7 @@ class WallFollower:
             front = self._lidar.front_dist
             right = self._lidar.right_dist
             fr    = self._lidar.front_right_dist
+            helper = self._lidar.rear_dist
 
             new_state = self._decide(front, right, fr)
 
@@ -126,11 +127,11 @@ class WallFollower:
             return 'SEARCH'
 
         # Case 2: too close
-        if right < WALL_LOWER_MM:
+        if right < WALL_LOWER_MM or fr < WALL_TARGET_MM or fr < WALL_LOWER_MM:
             return 'STEER_AWAY'
 
         # Case 3: too far
-        if right > WALL_UPPER_MM:
+        if right > WALL_UPPER_MM and fr > WALL_UPPER_MM:
             return 'STEER_TOWARD'
 
         return 'FORWARD'
@@ -148,22 +149,22 @@ class WallFollower:
             # Curve left (away from wall): left slower, right faster
             left_speed = BASE_SPEED + STEER_ADJUST  # 0.16 - 0.08 = 0.08
             right_speed = BASE_SPEED - STEER_ADJUST  # 0.16 + 0.08 = 0.24
-            self._robot.setWheelSpeedsRaw(0.14,-.15)
+            time.sleep(1)            
+            self._robot.setWheelSpeedsRaw(0.18,-.29)
 
         elif state == 'STEER_TOWARD':
             # Curve right (toward wall): left faster, right slower
             left_speed = BASE_SPEED + STEER_ADJUST  # 0.16 + 0.08 = 0.24
             right_speed = BASE_SPEED - STEER_ADJUST  # 0.16 - 0.08 = 0.08
-            self._robot.setWheelSpeedsRaw(0.14,.15)
+            time.sleep(1)            
+            self._robot.setWheelSpeedsRaw(0.18,.22)
         elif state == 'OBSTACLE_AVOID':
             # Turn left in place until front clears
-            self._robot.setWheelSpeeds(
-                -TURN_SPEED,
-                TURN_SPEED,
-            )
+            self._robot.stop()
         elif state == 'SEARCH':
             # Arc right to find the wall: left faster, right slower
-            self._robot.setWheelSpeedsRaw(0.18, .25)
+            time.sleep(1)
+            self._robot.setWheelSpeedsRaw(0.18, .4)
 
         # STOPPED — no motor command; robot.stop() was already called
 

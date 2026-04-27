@@ -30,15 +30,15 @@ REAR_MAX = 210
 STOP_DISTANCE_MM = 800  # Stop if obstacle closer than this
 
 # --- Wall-follower zone configuration (degrees) ---
-WF_FRONT_MIN1    = 320
+WF_FRONT_MIN1    = 340       # Front: 340-360° (20° arc right of forward)
 WF_FRONT_MAX1    = 360
-WF_FRONT_MIN2    = 0
+WF_FRONT_MIN2    = 0         # Front: 0-20° (20° arc left of forward)
 WF_FRONT_MAX2    = 20
-WF_FRONT_RIGHT_MIN = 290
+WF_FRONT_RIGHT_MIN = 290     # Front-right: 290-340° (50° arc, ~45° to right)
 WF_FRONT_RIGHT_MAX = 340
-WF_RIGHT_MIN       = 220
-WF_RIGHT_MAX       = 310
-WF_REAR_RIGHT_MIN  = 200
+WF_RIGHT_MIN       = 250     # Right: 250-290° (40° arc, perpendicular to right)
+WF_RIGHT_MAX       = 290
+WF_REAR_RIGHT_MIN  = 200     # Rear-right: 200-250° (50° arc, behind right side)
 WF_REAR_RIGHT_MAX  = 250
 MAX_VALID_DIST_MM = 6000  # discard spurious long-range readings
 
@@ -92,6 +92,7 @@ class LidarMonitor:
 
         # Wall-follower zone distances (min mm in zone, or None if no reading)
         self._front_dist = None
+        self._rear_dist = None
         self._right_dist = None
         self._front_right_dist = None
         self._rear_right_dist = None
@@ -99,6 +100,11 @@ class LidarMonitor:
     # ------------------------------------------------------------------
     # Public interface
     # ------------------------------------------------------------------
+    @property
+    def rear_dist(self):
+       with self._lock:
+           return self._rear_dist
+
 
     @property
     def front_blocked(self):
@@ -197,8 +203,8 @@ class LidarMonitor:
                         if quality == 0 or distance == 0 or distance > MAX_VALID_DIST_MM:
                             continue
 
-                        # Lidar is mounted flipped — mirror+rotate to match physical frame
-                        angle = (180 - angle) % 360
+                        # LIDAR is mounted with 0° pointing forward - no transformation needed
+                        # angle = (180 - angle) % 360  # REMOVED: This was causing front/rear flip
 
                         if _in_front_zone(angle) and distance < STOP_DISTANCE_MM:
                             new_front = True
