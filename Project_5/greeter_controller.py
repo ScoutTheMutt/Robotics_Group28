@@ -7,15 +7,14 @@ State machine:
   LISTENING             → waits for speech (or keyboard command injected via inject_destination())
   TURNING_AROUND        → executes 180° turn in place
   ALIGNING_TO_HALLWAY   → drives forward until walls appear on both sides
-  MOVING_TO_T           → wall-follows to T-intersection (front wall + sides open)
+  MOVING_TO_T           → drives straight until front wall is detected
   TURNING_TO_DESTINATION → executes 90° turn (RIGHT command=bathroom, LEFT command=lab)
   FINAL_MOVEMENT        → drives straight ~5 seconds to destination
   STOPPED               → announces arrival; awaits reset
 
 Obstacle avoidance:
-  - MOVING_TO_T: WallFollower handles OBSTACLE_AVOID internally (stops if front blocked).
-  - All other forward-motion states: robot.setWheelSpeeds() safety check stops motors
-    if LIDAR front_blocked; loop resumes automatically when obstacle clears.
+  - Forward-motion states use robot.setWheelSpeeds() safety checks. The T-intersection
+    approach stops early when front_dist is below T_FRONT_MM.
 
 Layout after robot turns around and drives toward the T-intersection:
   Bathroom  = turn right command, which physically turns left on this robot
@@ -37,7 +36,7 @@ TURN_RIGHT_WHEELS = (0.1, -0.4)  # raw wheel speeds for a right-command turn
 ALIGN_FORWARD_SPD = 0.15   # speed during ALIGNING_TO_HALLWAY
 ALIGN_WALL_MM     = 800    # right+left dist < this → considered "in hallway"
 ALIGN_TIMEOUT_S   = 6.0    # give up aligning after this many seconds
-T_FRONT_MM        = 600    # front dist < this → wall in front at T
+T_FRONT_MM        = 1500   # front dist < this → wall in front at T
 T_OPEN_MM         = 900    # right/left dist > this → side open at T
 FINAL_MOVE_SECS   = 5.0    # seconds to drive after turning at T
 FINAL_SPEED       = 0.15   # speed during final approach
@@ -239,24 +238,22 @@ class GreeterController:
 
     def _state_moving_to_t(self):
         """
-        Wall-follow to the T-intersection.
-        T detected when: front wall close AND right/left walls both open.
-        WallFollower handles obstacle avoidance internally.
+        Drive straight to the T-intersection.
+        T detected when the front wall is within T_FRONT_MM.
         """
-        print("[GREETER] Moving to T-intersection via wall follower...")
-        self._wall_follower.start()
+        print("[GREETER] Moving straight to T-intersection...")
 
         while self._is_running():
+            front = self._lidar.front_dist
             if self._is_t_intersection():
-                print("[GREETER] T-intersection detected!")
-                self._wall_follower.stop()
+                print(f"[GREETER] Front wall detected at T-intersection: {_fmt(front)}")
                 self._robot.stop()
                 time.sleep(0.3)
                 self._set_state('TURNING_TO_DESTINATION')
                 return
+            self._robot.driveForward(speed=ALIGN_FORWARD_SPD)
             time.sleep(0.1)
 
-        self._wall_follower.stop()
         self._robot.stop()
 
     def _state_turning_to_dest(self):
@@ -308,17 +305,11 @@ class GreeterController:
 
     def _is_t_intersection(self):
         """
-        T-intersection: front wall close AND right wall open AND left wall open.
+        T-intersection: front wall close enough to make the destination turn.
         """
         front = self._lidar.front_dist
-        right = self._lidar.right_dist
-        left  = self._lidar.left_dist
 
-        front_wall = front is not None and front < T_FRONT_MM
-        right_open = right is None or right > T_OPEN_MM
-        left_open  = left  is None or left  > T_OPEN_MM
-
-        return front_wall and right_open and left_open
+        return front is not None and front < T_FRONT_MM
 
     def _timed_turn(self, direction, seconds):
         """Turn in place for a fixed duration."""
