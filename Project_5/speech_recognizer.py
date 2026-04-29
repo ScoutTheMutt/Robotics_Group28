@@ -49,7 +49,7 @@ class SpeechRecognizer:
             
             if 'bathroom' in text or 'restroom' in text:
                 return 'bathroom'
-            elif 'robot' in text and 'lab' in text:
+            elif 'lab' in text or 'laboratory' in text:
                 return 'lab'
             
             return None

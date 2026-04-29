@@ -8,7 +8,7 @@ State machine:
   TURNING_AROUND        → executes 180° turn in place
   ALIGNING_TO_HALLWAY   → drives forward until walls appear on both sides
   MOVING_TO_T           → wall-follows to T-intersection (front wall + sides open)
-  TURNING_TO_DESTINATION → executes 90° turn (RIGHT=bathroom, LEFT=lab)
+  TURNING_TO_DESTINATION → executes 90° turn (RIGHT command=bathroom, LEFT command=lab)
   FINAL_MOVEMENT        → drives straight ~5 seconds to destination
   STOPPED               → announces arrival; awaits reset
 
@@ -17,9 +17,9 @@ Obstacle avoidance:
   - All other forward-motion states: robot.setWheelSpeeds() safety check stops motors
     if LIDAR front_blocked; loop resumes automatically when obstacle clears.
 
-Layout (after robot turns 180°):
-  Bathroom  = turn RIGHT   (was on robot's original LEFT)
-  Robot Lab = turn LEFT    (was on robot's original RIGHT)
+Layout after robot turns around and drives toward the T-intersection:
+  Bathroom  = turn right command, which physically turns left on this robot
+  Robot Lab = turn left command, which physically turns right on this robot
 """
 
 import threading
@@ -29,9 +29,9 @@ import time
 # Tunable — adjust after testing on hardware
 # ---------------------------------------------------------------------------
 HUMAN_DETECT_MM   = 1500   # front distance that triggers human detection
-TURN_180_SECS     = 4.0    # seconds for a 180° in-place turn
-TURN_90_SECS      = 2.0    # seconds for a 90° in-place turn
-TURN_SPEED        = 0.10   # wheel speed during turns
+TURN_180_SECS     = 8.0    # seconds for a 180° in-place turn
+TURN_90_SECS      = 4.0    # seconds for a 90° in-place turn
+TURN_SPEED        = 0.18   # wheel speed during turns
 ALIGN_FORWARD_SPD = 0.15   # speed during ALIGNING_TO_HALLWAY
 ALIGN_WALL_MM     = 800    # right+left dist < this → considered "in hallway"
 ALIGN_TIMEOUT_S   = 6.0    # give up aligning after this many seconds
@@ -260,14 +260,15 @@ class GreeterController:
     def _state_turning_to_dest(self):
         """
         Turn 90° toward the destination.
-        Bathroom = RIGHT, Robot Lab = LEFT (after the 180° turn).
+        Bathroom uses the right command because this robot physically turns left
+        for that command. Robot Lab uses the left command for the opposite turn.
         """
         dest = self.destination
         if dest == 'bathroom':
-            print("[GREETER] Turning RIGHT toward bathroom...")
+            print("[GREETER] Turning RIGHT command toward bathroom...")
             self._timed_turn('right', TURN_90_SECS)
         else:
-            print("[GREETER] Turning LEFT toward robot lab...")
+            print("[GREETER] Turning LEFT command toward robot lab...")
             self._timed_turn('left', TURN_90_SECS)
         self._set_state('FINAL_MOVEMENT')
 
