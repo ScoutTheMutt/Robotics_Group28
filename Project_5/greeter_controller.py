@@ -29,7 +29,7 @@ import time
 # Tunable — adjust after testing on hardware
 # ---------------------------------------------------------------------------
 HUMAN_DETECT_MM   = 1500   # front distance that triggers human detection
-TURN_180_SECS     = 5.0    # seconds for a 180° in-place turn
+TURN_180_SECS     = 4.0    # seconds for a 180° in-place turn
 TURN_90_SECS      = 4.0    # seconds for a 90° in-place turn
 TURN_SPEED        = 0.21   # wheel speed during turns
 ALIGN_FORWARD_SPD = 0.15   # speed during ALIGNING_TO_HALLWAY
