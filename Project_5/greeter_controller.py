@@ -32,6 +32,8 @@ HUMAN_DETECT_MM   = 1500   # front distance that triggers human detection
 TURN_180_SECS     = 4.0    # seconds for a 180° in-place turn
 TURN_90_SECS      = 4.0    # seconds for a 90° in-place turn
 TURN_SPEED        = 0.21   # wheel speed during turns
+TURN_LEFT_WHEELS  = (-0.21, 0.21)  # raw wheel speeds for a left-command turn
+TURN_RIGHT_WHEELS = (0.21, -0.21)  # raw wheel speeds for a right-command turn
 ALIGN_FORWARD_SPD = 0.15   # speed during ALIGNING_TO_HALLWAY
 ALIGN_WALL_MM     = 800    # right+left dist < this → considered "in hallway"
 ALIGN_TIMEOUT_S   = 6.0    # give up aligning after this many seconds
@@ -321,13 +323,13 @@ class GreeterController:
     def _timed_turn(self, direction, seconds):
         """Turn in place for a fixed duration."""
         steps = int(seconds * 10)
+        left_speed, right_speed = (
+            TURN_LEFT_WHEELS if direction == 'left' else TURN_RIGHT_WHEELS
+        )
         for _ in range(steps):
             if not self._is_running():
                 break
-            if direction == 'left':
-                self._robot.turnLeft(speed=TURN_SPEED)
-            else:
-                self._robot.turnRight(speed=TURN_SPEED)
+            self._robot.setWheelSpeedsRaw(left_speed, right_speed)
             time.sleep(0.1)
         self._robot.stop()
         time.sleep(0.2)
