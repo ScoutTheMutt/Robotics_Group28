@@ -51,6 +51,7 @@ class WallFollower:
         self._thread = None
         self._state = 'STOPPED'
         self._lock = threading.Lock()
+        self._search_enabled = True
 
     # ------------------------------------------------------------------
     # Public interface
@@ -61,17 +62,26 @@ class WallFollower:
         with self._lock:
             return self._state
 
-    def start(self):
-        """Start the wall-following loop in a background thread."""
+    def start(self, enable_search=True):
+        """
+        Start the wall-following loop in a background thread.
+
+        Args:
+            enable_search: If True, enters SEARCH state when wall is lost.
+                          If False, continues FORWARD when wall is lost.
+                          Default True for backward compatibility.
+        """
         with self._lock:
             if self._running:
                 return
             self._running = True
             self._state = 'FORWARD'
+            self._search_enabled = enable_search
 
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
-        print("[WALL] Wall follower started")
+        search_status = "enabled" if enable_search else "disabled"
+        print(f"[WALL] Wall follower started (search {search_status})")
 
     def stop(self):
         """Stop the wall follower and halt the robot."""
@@ -123,7 +133,10 @@ class WallFollower:
 
         # Case 4: wall lost
         if right is None or right > WALL_LOST_MM:
-            return 'SEARCH'
+            if self._search_enabled:
+                return 'SEARCH'
+            else:
+                return 'FORWARD'  # Continue forward when search disabled
 
         # Case 2: too close (right or front-right zone)
         if right < WALL_LOWER_MM or (fr is not None and fr < WALL_TARGET_MM):

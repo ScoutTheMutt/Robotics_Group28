@@ -29,17 +29,17 @@ import time
 # Tunable — adjust after testing on hardware
 # ---------------------------------------------------------------------------
 HUMAN_DETECT_MM   = 1500   # front distance that triggers human detection
-TURN_180_SECS     = 4.0    # seconds for a 180° in-place turn
-TURN_90_SECS      = 4.0    # seconds for a 90° in-place turn
+TURN_180_SECS     = 6.4    # seconds for a 180° in-place turn
+TURN_90_SECS      = 2.0    # seconds for a 90° in-place turn
 TURN_SPEED        = 0.21   # wheel speed during turns
-TURN_LEFT_WHEELS  = (0.1, 0.4)  # raw wheel speeds for a left-command turn
-TURN_RIGHT_WHEELS = (0.1, -0.4)  # raw wheel speeds for a right-command turn
+TURN_LEFT_WHEELS  = (0.15, -0.4)  # raw wheel speeds for a left-command turn
+TURN_RIGHT_WHEELS = (0.15, 0.4)  # raw wheel speeds for a right-command turn
 ALIGN_FORWARD_SPD = 0.15   # speed during ALIGNING_TO_HALLWAY
 ALIGN_WALL_MM     = 800    # right+left dist < this → considered "in hallway"
 ALIGN_TIMEOUT_S   = 6.0    # give up aligning after this many seconds
-T_FRONT_MM        = 600    # front dist < this → wall in front at T
+T_FRONT_MM        = 1500    # front dist < this → wall in front at T
 T_OPEN_MM         = 900    # right/left dist > this → side open at T
-FINAL_MOVE_SECS   = 5.0    # seconds to drive after turning at T
+FINAL_MOVE_SECS   = 4.0    # seconds to drive after turning at T
 FINAL_SPEED       = 0.15   # speed during final approach
 
 
@@ -242,9 +242,10 @@ class GreeterController:
         Wall-follow to the T-intersection.
         T detected when: front wall close AND right/left walls both open.
         WallFollower handles obstacle avoidance internally.
+        Search mode disabled — greeter controller handles T-detection.
         """
         print("[GREETER] Moving to T-intersection via wall follower...")
-        self._wall_follower.start()
+        self._wall_follower.start(enable_search=False)
 
         while self._is_running():
             if self._is_t_intersection():
